@@ -138,6 +138,9 @@ a:hover{color:var(--green-700)}
 .insight-content{display:flex;align-items:flex-start;gap:0.75rem;position:relative;z-index:1}
 .insight-icon{font-size:1.4rem;flex-shrink:0;margin-top:0.05rem}
 .insight-content p{font-size:0.9rem;line-height:1.6;opacity:0.97}
+.insight-gen-btn{position:relative;z-index:1;margin-top:0.85rem;display:inline-flex;align-items:center;gap:0.45rem;background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.35);color:#fff;font-family:var(--font-body);font-size:0.82rem;font-weight:600;padding:0.5rem 1rem;border-radius:100px;cursor:pointer;transition:background .2s,transform .12s}
+.insight-gen-btn:hover{background:rgba(255,255,255,0.34)}
+.insight-gen-btn:active{transform:scale(0.97)}
 .spinner-sm{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;flex-shrink:0}
 
 /* ===== SECTION ===== */

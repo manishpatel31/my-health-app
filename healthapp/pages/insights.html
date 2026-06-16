@@ -105,7 +105,7 @@
   <div class="insight-card">
     <div class="insight-card-header">
       <i class="fas fa-utensils"></i><span>What to Eat & When</span>
-      <button class="insight-refresh-btn" onclick="loadInsight('eat',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+      <button class="insight-refresh-btn" onclick="loadInsight('eat',this)"><i class="fas fa-rotate-right"></i> Generate</button>
     </div>
     <div class="insight-card-body loading" id="insight-eat">
       <span class="spinner-sm"></span> Loading...
@@ -115,7 +115,7 @@
   <div class="insight-card">
     <div class="insight-card-header">
       <i class="fas fa-clock"></i><span>Meal Timing Optimization</span>
-      <button class="insight-refresh-btn" onclick="loadInsight('timing',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+      <button class="insight-refresh-btn" onclick="loadInsight('timing',this)"><i class="fas fa-rotate-right"></i> Generate</button>
     </div>
     <div class="insight-card-body loading" id="insight-timing">
       <span class="spinner-sm"></span> Loading...
@@ -125,7 +125,7 @@
   <div class="insight-card">
     <div class="insight-card-header">
       <i class="fas fa-fire"></i><span>Metabolism & Fat Burn</span>
-      <button class="insight-refresh-btn" onclick="loadInsight('metabolism',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+      <button class="insight-refresh-btn" onclick="loadInsight('metabolism',this)"><i class="fas fa-rotate-right"></i> Generate</button>
     </div>
     <div class="insight-card-body loading" id="insight-metabolism">
       <span class="spinner-sm"></span> Loading...
@@ -135,7 +135,7 @@
   <div class="insight-card">
     <div class="insight-card-header">
       <i class="fas fa-calendar-week"></i><span>This Week's Progress Review</span>
-      <button class="insight-refresh-btn" onclick="loadInsight('week',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+      <button class="insight-refresh-btn" onclick="loadInsight('week',this)"><i class="fas fa-rotate-right"></i> Generate</button>
     </div>
     <div class="insight-card-body loading" id="insight-week">
       <span class="spinner-sm"></span> Loading...
@@ -204,8 +204,22 @@ async function initInsightsPage() {
 - Weekly steps: ${weekSteps.toLocaleString()}
 - Weight entries: ${weights.length}`;
 
-  // Load all insights
-  loadInsight('eat'); loadInsight('timing'); loadInsight('metabolism'); loadInsight('week');
+  // Show cached insights only — do NOT auto-call the AI (saves tokens)
+  ['eat','timing','metabolism','week'].forEach(showCachedInsight);
+}
+
+function insightCacheKey(type){ return 'vg_insight_'+type; }
+
+function showCachedInsight(type) {
+  const el = document.getElementById('insight-'+type); if (!el) return;
+  let c=null; try { c = JSON.parse(localStorage.getItem(insightCacheKey(type))||'null'); } catch {}
+  el.className = 'insight-card-body';
+  if (c && c.text) {
+    const when = c.ts ? new Date(c.ts).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : '';
+    el.innerHTML = formatMessage(c.text) + (when ? `<div style="margin-top:0.6rem;font-size:0.72rem;color:var(--muted)">🕒 Generated ${when} · tap Generate to refresh</div>` : '');
+  } else {
+    el.innerHTML = `<button class="btn-secondary" style="width:100%" onclick="loadInsight('${type}')"><i class="fas fa-wand-magic-sparkles"></i> Generate this insight</button>`;
+  }
 }
 
 const insightPrompts = {
@@ -224,6 +238,7 @@ async function loadInsight(type, btn) {
       `You are an expert health coach. Here is the user's data:\n${healthCtx}\n\nGive personalized advice based specifically on their numbers.`, 600);
     el.className = 'insight-card-body';
     el.innerHTML = formatMessage(reply);
+    localStorage.setItem(insightCacheKey(type), JSON.stringify({ text: reply, ts: Date.now() }));
   } catch(e) {
     el.className = 'insight-card-body';
     el.innerHTML = `<span style="color:var(--danger)">⚠️ ${escHtml(e.message)}</span>`;
