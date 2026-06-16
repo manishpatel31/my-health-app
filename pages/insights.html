@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Insights — VitalGreen</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <a href="../index.html" class="nav-brand"><span class="brand-leaf">🌿</span><span class="brand-name">VitalGreen</span></a>
+  <div class="nav-links">
+    <a href="../index.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="calories.html" class="nav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+    <a href="weight.html" class="nav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+    <a href="walk.html" class="nav-link"><i class="fas fa-person-walking"></i><span>Walk</span></a>
+    <a href="insights.html" class="nav-link active"><i class="fas fa-chart-line"></i><span>Insights</span></a>
+    <a href="tips.html" class="nav-link"><i class="fas fa-lightbulb"></i><span>Tips</span></a>
+    <a href="coach.html" class="nav-link"><i class="fas fa-robot"></i><span>Coach</span></a>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="page-header">
+    <h1 class="page-title">AI Insights</h1>
+    <p class="page-sub">Personalized analysis powered by Groq · updates with your data</p>
+  </div>
+
+  <!-- Weekly Summary Stats -->
+  <div class="weekly-summary-grid">
+    <div class="ws-card"><div class="ws-val" id="wsAvgCal">—</div><div class="ws-label">Avg. kcal/day</div></div>
+    <div class="ws-card"><div class="ws-val" id="wsWeightDelta">—</div><div class="ws-label">Weight change</div></div>
+    <div class="ws-card"><div class="ws-val" id="wsTotalSteps">—</div><div class="ws-label">Steps this week</div></div>
+  </div>
+
+  <!-- Calorie Deficit Planner -->
+  <div class="deficit-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+      <div class="card-title" style="margin-bottom:0">Calorie Deficit Planner</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Current Weight (kg)</label>
+        <input type="number" id="planCurrentW" placeholder="72" step="0.1"/>
+      </div>
+      <div class="form-group">
+        <label>Target Weight (kg)</label>
+        <input type="number" id="planTargetW" placeholder="65" step="0.1"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Height (cm)</label>
+        <input type="number" id="planHeight" placeholder="175"/>
+      </div>
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" id="planAge" placeholder="28"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Gender</label>
+        <select id="planGender"><option value="male">Male</option><option value="female">Female</option></select>
+      </div>
+      <div class="form-group">
+        <label>Activity Level</label>
+        <select id="planActivity">
+          <option value="sedentary">Sedentary (desk job)</option>
+          <option value="light">Light (1-3x/week)</option>
+          <option value="moderate" selected>Moderate (3-5x/week)</option>
+          <option value="active">Active (6-7x/week)</option>
+          <option value="veryactive">Very Active</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Weekly Weight Loss Target</label>
+      <select id="planWeeklyLoss">
+        <option value="0.25">0.25 kg/week (gentle)</option>
+        <option value="0.5" selected>0.5 kg/week (recommended)</option>
+        <option value="0.75">0.75 kg/week (moderate)</option>
+        <option value="1">1 kg/week (aggressive)</option>
+      </select>
+    </div>
+    <button class="btn-secondary" onclick="calcDeficitPlan()" style="width:100%;margin-bottom:0.75rem">
+      <i class="fas fa-calculator"></i> Calculate My Plan
+    </button>
+    <div id="deficitResult" style="display:none">
+      <div class="deficit-grid">
+        <div class="deficit-item"><div class="d-val" id="dBMR">—</div><div class="d-label">BMR (kcal)</div></div>
+        <div class="deficit-item"><div class="d-val" id="dTDEE">—</div><div class="d-label">TDEE (kcal)</div></div>
+        <div class="deficit-item"><div class="d-val" id="dDeficit">—</div><div class="d-label">Daily deficit</div></div>
+        <div class="deficit-item"><div class="d-val" id="dTarget">—</div><div class="d-label">Eat this much</div></div>
+      </div>
+      <div class="weeks-banner" id="weeksBanner" style="display:none">
+        <div class="weeks-num" id="dWeeks">—</div>
+        <div class="weeks-label">weeks to reach your target weight</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Insights Cards -->
+  <div class="insight-card">
+    <div class="insight-card-header">
+      <i class="fas fa-utensils"></i><span>What to Eat & When</span>
+      <button class="insight-refresh-btn" onclick="loadInsight('eat',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+    </div>
+    <div class="insight-card-body loading" id="insight-eat">
+      <span class="spinner-sm"></span> Loading...
+    </div>
+  </div>
+
+  <div class="insight-card">
+    <div class="insight-card-header">
+      <i class="fas fa-clock"></i><span>Meal Timing Optimization</span>
+      <button class="insight-refresh-btn" onclick="loadInsight('timing',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+    </div>
+    <div class="insight-card-body loading" id="insight-timing">
+      <span class="spinner-sm"></span> Loading...
+    </div>
+  </div>
+
+  <div class="insight-card">
+    <div class="insight-card-header">
+      <i class="fas fa-fire"></i><span>Metabolism & Fat Burn</span>
+      <button class="insight-refresh-btn" onclick="loadInsight('metabolism',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+    </div>
+    <div class="insight-card-body loading" id="insight-metabolism">
+      <span class="spinner-sm"></span> Loading...
+    </div>
+  </div>
+
+  <div class="insight-card">
+    <div class="insight-card-header">
+      <i class="fas fa-calendar-week"></i><span>This Week's Progress Review</span>
+      <button class="insight-refresh-btn" onclick="loadInsight('week',this)"><i class="fas fa-rotate-right"></i> Refresh</button>
+    </div>
+    <div class="insight-card-body loading" id="insight-week">
+      <span class="spinner-sm"></span> Loading...
+    </div>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <a href="../index.html" class="bnav-link"><i class="fas fa-home"></i><span>Home</span></a>
+  <a href="calories.html" class="bnav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+  <a href="walk.html" class="bnav-link"><i class="fas fa-person-walking"></i><span>Walk</span></a>
+  <a href="insights.html" class="bnav-link active"><i class="fas fa-chart-line"></i><span>Insights</span></a>
+  <a href="coach.html" class="bnav-link"><i class="fas fa-robot"></i><span>Coach</span></a>
+</nav>
+
+<script src="../js/storage.js"></script>
+<script src="../js/app.js"></script>
+<script>
+let healthCtx = '';
+
+async function initInsightsPage() {
+  const [weights, allFoods, settings, walks] = await Promise.all([
+    Storage.getWeights(), Storage.getFoods(), Storage.getSettings(), Storage.getWalks()]);
+
+  // Pre-fill planner from settings
+  if (settings.heightCm) document.getElementById('planHeight').value = settings.heightCm;
+  if (settings.age) document.getElementById('planAge').value = settings.age;
+  if (settings.gender) document.getElementById('planGender').value = settings.gender;
+  if (settings.activityLevel) document.getElementById('planActivity').value = settings.activityLevel;
+  if (settings.weeklyLossKg) document.getElementById('planWeeklyLoss').value = settings.weeklyLossKg;
+  if (weights[0]) document.getElementById('planCurrentW').value = weights[0].kg;
+  if (settings.targetWeightKg) document.getElementById('planTargetW').value = settings.targetWeightKg;
+
+  // Weekly stats
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const weekFoods = allFoods.filter(f => new Date(f.date) >= weekAgo);
+  const weekWalks = walks.filter(w => new Date(w.date) >= weekAgo);
+  const dayMap = {};
+  weekFoods.forEach(f => { dayMap[f.date] = (dayMap[f.date]||0) + (f.calories||0); });
+  const dayVals = Object.values(dayMap);
+  const avgCal = dayVals.length ? Math.round(dayVals.reduce((a,b)=>a+b,0)/dayVals.length) : 0;
+  const weekSteps = weekWalks.reduce((s,w)=>s+(w.steps||0),0);
+  document.getElementById('wsAvgCal').textContent = avgCal || '—';
+  document.getElementById('wsTotalSteps').textContent = weekSteps ? weekSteps.toLocaleString() : '—';
+  if (weights.length >= 2) {
+    const diff = (weights[0].kg - weights[Math.min(7,weights.length-1)].kg).toFixed(1);
+    const el = document.getElementById('wsWeightDelta');
+    el.textContent = (diff>0?'+':'')+diff+' kg';
+    el.style.color = diff<=0 ? 'var(--green-600)' : 'var(--accent)';
+  }
+
+  // Build context
+  const latestW = weights[0]?.kg;
+  const bmi = latestW && settings.heightCm ? (latestW/((settings.heightCm/100)**2)).toFixed(1) : null;
+  const todayFoods = allFoods.filter(f => f.date === Storage.today());
+  const todayKcal = todayFoods.reduce((s,f)=>s+(f.calories||0),0);
+  healthCtx = `User data:
+- Weight: ${latestW||'?'}kg, Target: ${settings.targetWeightKg||'?'}kg, BMI: ${bmi||'?'}
+- Height: ${settings.heightCm||'?'}cm, Age: ${settings.age||'?'}, Gender: ${settings.gender||'?'}
+- Activity: ${settings.activityLevel||'moderate'}, Calorie goal: ${settings.calorieGoal||2000}
+- Today's calories: ${Math.round(todayKcal)} kcal
+- Today's foods: ${todayFoods.map(f=>f.name).join(', ')||'none yet'}
+- Avg weekly calories: ${avgCal||'?'} kcal/day
+- Weekly steps: ${weekSteps.toLocaleString()}
+- Weight entries: ${weights.length}`;
+
+  // Load all insights
+  loadInsight('eat'); loadInsight('timing'); loadInsight('metabolism'); loadInsight('week');
+}
+
+const insightPrompts = {
+  eat: `Based on this user's health data, give specific advice on what they should eat for weight loss. Suggest 5 specific foods/meals (include Indian options). Format nicely with practical portion guidance. 3-4 paragraphs.`,
+  timing: `Based on this user's data, give a practical meal timing schedule for the day optimized for weight loss and energy. Include specific times, what to eat, intermittent fasting considerations. Make it actionable.`,
+  metabolism: `Explain how this user can boost their metabolism for faster fat burn given their profile. Cover sleep, protein, NEAT, resistance training, and specific tips. Keep it practical and motivating.`,
+  week: `Review this user's health data and give a personalized weekly progress analysis. What's going well? What needs improvement? Give 3 specific action items for next week. Be encouraging but honest.`,
+};
+
+async function loadInsight(type, btn) {
+  const el = document.getElementById('insight-'+type);
+  el.className = 'insight-card-body loading';
+  el.innerHTML = '<span class="spinner-sm"></span> Generating insight...';
+  try {
+    const reply = await callGroq([{role:'user',content:insightPrompts[type]}],
+      `You are an expert health coach. Here is the user's data:\n${healthCtx}\n\nGive personalized advice based specifically on their numbers.`, 600);
+    el.className = 'insight-card-body';
+    el.innerHTML = formatMessage(reply);
+  } catch(e) {
+    el.className = 'insight-card-body';
+    el.innerHTML = `<span style="color:var(--danger)">⚠️ ${escHtml(e.message)}</span>`;
+  }
+}
+
+function calcDeficitPlan() {
+  const cw = parseFloat(document.getElementById('planCurrentW').value);
+  const tw = parseFloat(document.getElementById('planTargetW').value);
+  const h  = parseFloat(document.getElementById('planHeight').value);
+  const age = parseInt(document.getElementById('planAge').value) || 30;
+  const gender = document.getElementById('planGender').value;
+  const activity = document.getElementById('planActivity').value;
+  const weeklyLoss = parseFloat(document.getElementById('planWeeklyLoss').value);
+  if (!cw || !h) { showToast('Enter current weight and height'); return; }
+  const settings = { heightCm:h, age, gender, activityLevel:activity, weeklyLossKg:weeklyLoss, targetWeightKg:tw||null };
+  const result = calcDeficit(settings, cw);
+  document.getElementById('dBMR').textContent = result.bmr;
+  document.getElementById('dTDEE').textContent = result.tdee;
+  document.getElementById('dDeficit').textContent = result.dailyDeficit;
+  document.getElementById('dTarget').textContent = result.targetCal;
+  document.getElementById('deficitResult').style.display = 'block';
+  if (tw && result.weeksToGoal) {
+    document.getElementById('dWeeks').textContent = result.weeksToGoal;
+    document.getElementById('weeksBanner').style.display = 'block';
+  } else { document.getElementById('weeksBanner').style.display = 'none'; }
+  // Save to settings
+  Storage.saveSettings({ heightCm:h, age, gender, activityLevel:activity, weeklyLossKg:weeklyLoss,
+    targetWeightKg:tw||null, calorieGoal: result.targetCal });
+  showToast(`✓ Plan saved! Eat ${result.targetCal} kcal/day`);
+}
+
+function formatMessage(text) {
+  return text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>');
+}
+
+initInsightsPage();
+</script>
+</body>
+</html>

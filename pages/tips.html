@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Tips — VitalGreen</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <a href="../index.html" class="nav-brand"><span class="brand-leaf">🌿</span><span class="brand-name">VitalGreen</span></a>
+  <div class="nav-links">
+    <a href="../index.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="calories.html" class="nav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+    <a href="weight.html" class="nav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+    <a href="walk.html" class="nav-link"><i class="fas fa-person-walking"></i><span>Walk</span></a>
+    <a href="insights.html" class="nav-link"><i class="fas fa-chart-line"></i><span>Insights</span></a>
+    <a href="tips.html" class="nav-link active"><i class="fas fa-lightbulb"></i><span>Tips</span></a>
+    <a href="coach.html" class="nav-link"><i class="fas fa-robot"></i><span>Coach</span></a>
+  </div>
+</nav>
+
+<main class="main-content">
+  <div class="tips-hero">
+    <div style="font-size:2rem;margin-bottom:0.5rem">💡</div>
+    <h2>Easy Weight Loss Tips</h2>
+    <p>Science-backed strategies that actually work — no crash diets, no gimmicks</p>
+  </div>
+
+  <!-- AI Personalized Tip -->
+  <button class="btn-primary ai-tips-btn" onclick="getPersonalisedTip()" id="aiTipBtn">
+    <i class="fas fa-robot"></i> Get My Personalised Tip from AI Coach
+  </button>
+  <div id="aiTipBox" style="display:none;background:linear-gradient(135deg,var(--green-800),var(--green-600));color:white;border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem">
+    <div class="bubble-label" style="color:rgba(255,255,255,0.7);margin-bottom:0.5rem">🌿 YOUR PERSONAL TIP</div>
+    <div id="aiTipText" style="font-size:0.9rem;line-height:1.7"></div>
+  </div>
+
+  <!-- Nutrition Tips -->
+  <div class="tip-category">
+    <div class="tip-category-title">🥗 Nutrition</div>
+    <div class="tip-card"><div class="tip-card-icon">🥤</div><div class="tip-card-body"><div class="tip-card-title">Drink water before every meal</div><div class="tip-card-text">Drinking 500ml of water 30 minutes before meals reduces hunger and calorie intake by up to 13%. Make it a non-negotiable habit.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🍽️</div><div class="tip-card-body"><div class="tip-card-title">Use smaller plates</div><div class="tip-card-text">Switching from a 12-inch to a 10-inch plate reduces calorie intake by 22% on average. Your brain is tricked into feeling satisfied with less food.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🥚</div><div class="tip-card-body"><div class="tip-card-title">Eat protein at every meal</div><div class="tip-card-text">Protein boosts metabolism by 80-100 kcal/day, reduces hunger hormones by 60%, and prevents muscle loss during weight loss. Aim for 1.6g per kg of body weight.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🌾</div><div class="tip-card-body"><div class="tip-card-title">Choose whole grains over refined</div><div class="tip-card-text">Brown rice, whole wheat roti, oats, and millets digest slower, keep you full longer, and have fewer net calories than white rice or maida. Simple swap, big impact.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🥬</div><div class="tip-card-body"><div class="tip-card-title">Fill half your plate with vegetables</div><div class="tip-card-text">Non-starchy vegetables are high in fiber and water, extremely low in calories, and fill your stomach. Eat them first — you'll naturally eat less of everything else.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🚫</div><div class="tip-card-body"><div class="tip-card-title">Cut liquid calories first</div><div class="tip-card-text">Cold drinks, packaged juices, chai with sugar, and alcohol are the easiest calories to cut. Replace with water, black coffee, or plain green tea and save 300-500 kcal/day effortlessly.</div></div></div>
+  </div>
+
+  <!-- Habit Tips -->
+  <div class="tip-category">
+    <div class="tip-category-title">⏰ Habits & Timing</div>
+    <div class="tip-card"><div class="tip-card-icon">🌙</div><div class="tip-card-body"><div class="tip-card-title">Stop eating 2-3 hours before bed</div><div class="tip-card-text">Late-night eating shifts calories into fat storage more easily. Your metabolism slows significantly at night. A simple kitchen cutoff time of 8 PM can make a huge difference.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🐢</div><div class="tip-card-body"><div class="tip-card-title">Eat slowly — chew 20 times per bite</div><div class="tip-card-text">It takes 20 minutes for your brain to register fullness. Slow eaters consistently consume 10-15% fewer calories without trying. Put your fork down between bites.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">😴</div><div class="tip-card-body"><div class="tip-card-title">Sleep 7-9 hours every night</div><div class="tip-card-text">Sleep deprivation increases ghrelin (hunger hormone) by 28% and decreases leptin (fullness hormone). Poor sleep can cause you to eat 300-400 extra calories the next day.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🍱</div><div class="tip-card-body"><div class="tip-card-title">Meal prep on Sundays</div><div class="tip-card-text">People who prepare meals in advance lose 2x more weight than those who don't. Cook dals, sabzis, and grains in bulk so healthy food is always the easiest option.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">📵</div><div class="tip-card-body"><div class="tip-card-title">No screens while eating</div><div class="tip-card-text">Eating while watching TV or scrolling your phone causes mindless eating and increases calorie intake by up to 25%. Eat at the table, taste your food.</div></div></div>
+  </div>
+
+  <!-- Movement Tips -->
+  <div class="tip-category">
+    <div class="tip-category-title">🏃 Movement</div>
+    <div class="tip-card"><div class="tip-card-icon">🚶</div><div class="tip-card-body"><div class="tip-card-title">Walk after every meal</div><div class="tip-card-text">A 10-15 minute walk after eating reduces blood sugar spikes by 30%, improves digestion, burns 50-80 extra calories, and builds a powerful daily habit that compounds over time.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🪜</div><div class="tip-card-body"><div class="tip-card-title">Take stairs, park far away</div><div class="tip-card-text">NEAT (Non-Exercise Activity Thermogenesis) — small movements throughout the day — burns 300-700 extra kcal/day. Fidgeting, standing, and walking casually add up enormously.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🏋️</div><div class="tip-card-body"><div class="tip-card-title">Add resistance training 2x per week</div><div class="tip-card-text">Muscle burns 3x more calories than fat, even at rest. Just 2 sessions of bodyweight exercises per week (squats, push-ups, lunges) prevents muscle loss and boosts your metabolism long-term.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🌅</div><div class="tip-card-body"><div class="tip-card-title">Morning movement beats willpower</div><div class="tip-card-text">People who exercise in the morning are 50% more likely to stick to it. Willpower depletes through the day. Make your walk or workout the first thing you do.</div></div></div>
+  </div>
+
+  <!-- Psychology Tips -->
+  <div class="tip-category">
+    <div class="tip-category-title">🧠 Mindset</div>
+    <div class="tip-card"><div class="tip-card-icon">📊</div><div class="tip-card-body"><div class="tip-card-title">Track everything — even the bad days</div><div class="tip-card-text">People who track food consistently lose 2-3x more weight than those who don't. Tracking on bad days is even more important — awareness prevents spiral eating and builds accountability.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🎯</div><div class="tip-card-body"><div class="tip-card-title">Focus on 0.5 kg per week — not faster</div><div class="tip-card-text">Losing more than 0.5-1 kg/week causes muscle loss, nutritional deficiencies, and rebound weight gain. Slow, steady loss keeps muscle and stays off permanently.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🔄</div><div class="tip-card-body"><div class="tip-card-title">Progress photos beat the scale</div><div class="tip-card-text">Weight fluctuates 1-3 kg daily due to water, food, hormones. Take weekly photos and measure waist circumference instead. The mirror is more honest than the scale.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🎉</div><div class="tip-card-body"><div class="tip-card-title">Celebrate non-scale victories</div><div class="tip-card-text">Clothes fitting better, more energy, better sleep, lower blood pressure — these matter more than the number. Celebrating small wins keeps you motivated through plateaus.</div></div></div>
+  </div>
+
+  <!-- Indian Food Tips -->
+  <div class="tip-category">
+    <div class="tip-category-title">🇮🇳 Smart Indian Food Swaps</div>
+    <div class="tip-card"><div class="tip-card-icon">🍚</div><div class="tip-card-body"><div class="tip-card-title">Cook and cool rice (resistant starch)</div><div class="tip-card-text">Cooling cooked rice for 12 hours increases resistant starch by 10x, reducing effective calories by 50-60%. Heat and eat next day — it tastes the same but works very differently in your body.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🫙</div><div class="tip-card-body"><div class="tip-card-title">Dal is your best friend</div><div class="tip-card-text">Moong, masoor, chana dal — high protein, high fiber, low fat. A bowl of dal provides 15-18g protein. Eating dal before rice significantly reduces your total rice consumption.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🫕</div><div class="tip-card-body"><div class="tip-card-title">Swap maida for besan, jowar, bajra</div><div class="tip-card-text">Chickpea flour (besan) has 3x more protein and 5x more fiber than refined flour. Jowar and bajra rotis are lower glycemic and more nutrient-dense than wheat. Small swap, massive upgrade.</div></div></div>
+    <div class="tip-card"><div class="tip-card-icon">🥗</div><div class="tip-card-body"><div class="tip-card-title">Replace evening snacks with chana/makhana</div><div class="tip-card-text">Roasted chana and makhana (fox nuts) are high-protein, low-calorie alternatives to namkeen, chips, and biscuits. 30g of roasted chana gives 8g protein for only 100 calories.</div></div></div>
+  </div>
+</main>
+
+<nav class="bottom-nav">
+  <a href="../index.html" class="bnav-link"><i class="fas fa-home"></i><span>Home</span></a>
+  <a href="calories.html" class="bnav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+  <a href="walk.html" class="bnav-link"><i class="fas fa-person-walking"></i><span>Walk</span></a>
+  <a href="insights.html" class="bnav-link"><i class="fas fa-chart-line"></i><span>Insights</span></a>
+  <a href="coach.html" class="bnav-link"><i class="fas fa-robot"></i><span>Coach</span></a>
+</nav>
+
+<script src="../js/storage.js"></script>
+<script src="../js/app.js"></script>
+<script>
+async function getPersonalisedTip() {
+  const btn = document.getElementById('aiTipBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Getting your tip...';
+  const box = document.getElementById('aiTipBox');
+  const tipText = document.getElementById('aiTipText');
+  box.style.display='block'; tipText.innerHTML='🤖 Analysing your data...';
+  try {
+    const [weights, foods, settings] = await Promise.all([
+      Storage.getWeights(), Storage.getFoods(Storage.today()), Storage.getSettings()]);
+    const latestW = weights[0]?.kg;
+    const todayKcal = foods.reduce((s,f)=>s+(f.calories||0),0);
+    const bmi = latestW && settings.heightCm ? (latestW/((settings.heightCm/100)**2)).toFixed(1) : null;
+    const prompt = `User: ${latestW||'?'}kg, target ${settings.targetWeightKg||'?'}kg, BMI ${bmi||'?'}, today eaten ${Math.round(todayKcal)} of ${settings.calorieGoal||2000} kcal, foods: ${foods.map(f=>f.name).join(', ')||'nothing yet'}.
+Give ONE specific, personalized, actionable weight loss tip for this person RIGHT NOW based on their data. Max 3 sentences. Be direct and concrete, not generic.`;
+    const reply = await callGroq([{role:'user',content:prompt}],
+      'You are a sharp health coach. Give one highly specific, data-driven tip. Never give generic advice.');
+    tipText.innerHTML = escHtml(reply);
+  } catch(e) {
+    tipText.innerHTML = '⚠️ Could not connect to AI. Check your Groq API key in settings.';
+  } finally {
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-robot"></i> Get My Personalised Tip from AI Coach';
+  }
+}
+</script>
+</body>
+</html>
