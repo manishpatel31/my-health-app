@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Health Coach — VitalGreen</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="../index.html" style="display:flex;align-items:center;gap:0.5rem;color:inherit;">
+        <span class="brand-leaf">🌿</span>
+        <span class="brand-name">VitalGreen</span>
+      </a>
+    </div>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+      <a href="weight.html" class="nav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+      <a href="calories.html" class="nav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+      <a href="coach.html" class="nav-link active"><i class="fas fa-robot"></i><span>AI Coach</span></a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">AI Health Coach</h1>
+      <p class="page-sub">Powered by Groq · Llama 3 · Knows your health data</p>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="chat-suggestions" id="suggestions">
+      <button class="suggestion-chip" onclick="sendSuggestion(this)">📊 Analyze my progress</button>
+      <button class="suggestion-chip" onclick="sendSuggestion(this)">🍽️ What should I eat today?</button>
+      <button class="suggestion-chip" onclick="sendSuggestion(this)">💪 Give me a workout plan</button>
+      <button class="suggestion-chip" onclick="sendSuggestion(this)">⚖️ Am I at a healthy weight?</button>
+      <button class="suggestion-chip" onclick="sendSuggestion(this)">🥗 High protein Indian meals</button>
+    </div>
+
+    <!-- Chat -->
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-bubble ai">
+          <div class="bubble-label">🌿 VitalGreen Coach</div>
+          <p>Hi! I'm your AI health coach. I have access to your health data — your weight history, calorie logs, and BMI. Ask me anything about your health, diet, or fitness goals!</p>
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <textarea id="chatInput" placeholder="Ask your health coach..." rows="1"
+          onkeydown="handleChatKey(event)"
+          oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <button class="chat-send-btn" onclick="sendMessage()" id="sendBtn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="../index.html" class="bnav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="weight.html" class="bnav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+    <a href="calories.html" class="bnav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+    <a href="coach.html" class="bnav-link active"><i class="fas fa-robot"></i><span>AI Coach</span></a>
+  </nav>
+
+  <script src="../js/storage.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    let chatHistory = [];
+    let healthContext = '';
+
+    async function initCoachPage() {
+      // Build health context from user's data
+      const [weights, todayFoods, settings, cfg] = await Promise.all([
+        Storage.getWeights(),
+        Storage.getFoods(Storage.today()),
+        Storage.getSettings(),
+        Promise.resolve(Storage.getConfig()),
+      ]);
+
+      const latestWeight = weights[0]?.kg || null;
+      const heightCm     = settings.heightCm || null;
+      const bmi = latestWeight && heightCm
+        ? ((latestWeight / ((heightCm / 100) ** 2)).toFixed(1))
+        : null;
+      const todayKcal = todayFoods.reduce((s, f) => s + (f.calories || 0), 0);
+      const goal = settings.calorieGoal || 2000;
+
+      // Weight trend
+      let weightTrend = '';
+      if (weights.length >= 2) {
+        const diff = (weights[0].kg - weights[weights.length - 1].kg).toFixed(1);
+        weightTrend = `Weight trend over ${weights.length} entries: ${diff > 0 ? '+' : ''}${diff} kg overall.`;
+      }
+
+      healthContext = `
+User Profile:
+- Name: ${cfg.userName || 'User'}
+- Latest weight: ${latestWeight ? latestWeight + ' kg' : 'not logged'}
+- Height: ${heightCm ? heightCm + ' cm' : 'not set'}
+- BMI: ${bmi ? bmi + ' (' + bmiCategory(parseFloat(bmi)) + ')' : 'unknown'}
+- Calorie goal: ${goal} kcal/day
+- Calories consumed today: ${Math.round(todayKcal)} kcal (${Math.round(todayKcal / goal * 100)}% of goal)
+- Today's meals: ${todayFoods.length > 0 ? todayFoods.map(f => f.name + ' (' + Math.round(f.calories) + ' kcal)').join(', ') : 'none logged yet'}
+- ${weightTrend}
+- Weight log count: ${weights.length} entries
+      `.trim();
+    }
+
+    function handleChatKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function sendSuggestion(btn) {
+      const text = btn.textContent.replace(/^[^\w]+/, '').trim();
+      document.getElementById('chatInput').value = text;
+      document.getElementById('suggestions').style.display = 'none';
+      sendMessage();
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Hide suggestions after first message
+      document.getElementById('suggestions').style.display = 'none';
+
+      // Add user bubble
+      appendBubble('user', text);
+      chatHistory.push({ role: 'user', content: text });
+      input.value = '';
+      input.style.height = 'auto';
+
+      // Disable send
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.innerHTML = '<span class="spinner" style="border-top-color:white;width:16px;height:16px"></span>';
+
+      // Typing indicator
+      const typingId = appendTyping();
+
+      const systemPrompt = `You are a warm, knowledgeable AI health coach inside the VitalGreen app. You have access to the user's real health data:
+
+${healthContext}
+
+Guidelines:
+- Be encouraging, personalized, and specific — always reference their actual data
+- Give actionable, practical advice
+- For Indian users, suggest relevant Indian foods when appropriate
+- Keep responses concise but complete (2–4 paragraphs max)
+- Use emojis sparingly for warmth
+- Always remind users you're an AI and they should consult healthcare professionals for medical decisions
+- Never recommend extreme diets or dangerous practices`;
+
+      try {
+        const reply = await callGroq(chatHistory, systemPrompt);
+        removeTyping(typingId);
+        appendBubble('ai', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+
+        // Keep history manageable
+        if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+      } catch (e) {
+        removeTyping(typingId);
+        appendBubble('ai', `⚠️ Sorry, I couldn't connect to the AI. Check your Groq API key in settings. Error: ${e.message}`);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      }
+    }
+
+    function appendBubble(role, text) {
+      const msgs = document.getElementById('chatMessages');
+      const div = document.createElement('div');
+      div.className = `chat-bubble ${role}`;
+
+      if (role === 'ai') {
+        div.innerHTML = `<div class="bubble-label">🌿 VitalGreen Coach</div><div class="bubble-text">${formatMessage(text)}</div>`;
+      } else {
+        div.textContent = text;
+      }
+
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return div;
+    }
+
+    function appendTyping() {
+      const msgs = document.getElementById('chatMessages');
+      const id = 'typing-' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'chat-bubble ai';
+      div.id = id;
+      div.innerHTML = '<div class="bubble-label">🌿 VitalGreen Coach</div><div class="typing-dots"><span></span><span></span><span></span></div>';
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+      return id;
+    }
+
+    function removeTyping(id) {
+      document.getElementById(id)?.remove();
+    }
+
+    function formatMessage(text) {
+      // Convert basic markdown
+      return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        .replace(/^/, '<p>').replace(/$/, '</p>');
+    }
+
+    initCoachPage();
+  </script>
+</body>
+</html>

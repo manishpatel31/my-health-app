@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calorie Counter — VitalGreen</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="../index.html" style="display:flex;align-items:center;gap:0.5rem;color:inherit;">
+        <span class="brand-leaf">🌿</span>
+        <span class="brand-name">VitalGreen</span>
+      </a>
+    </div>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+      <a href="weight.html" class="nav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+      <a href="calories.html" class="nav-link active"><i class="fas fa-utensils"></i><span>Calories</span></a>
+      <a href="coach.html" class="nav-link"><i class="fas fa-robot"></i><span>AI Coach</span></a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Calorie Counter</h1>
+      <p class="page-sub">Just type the food and portion — AI calculates the rest.</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="calorie-target-bar">
+      <div class="target-row">
+        <div>
+          <span class="target-consumed" id="totalCalories">0</span>
+          <span style="font-size:1rem;color:var(--muted)"> kcal</span>
+        </div>
+        <div class="target-goal">Goal: <strong id="goalDisplay">2000</strong> kcal</div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:0.5rem;font-size:0.78rem;color:var(--muted)">
+        <span id="remainingCal">2000 remaining</span>
+        <span id="progressPct">0%</span>
+      </div>
+    </div>
+
+    <!-- AI Food Input -->
+    <div class="food-input-card">
+      <h3><i class="fas fa-sparkles" style="margin-right:0.5rem;opacity:0.7"></i>AI-Powered Food Logging</h3>
+      <div class="food-input-row">
+        <div class="form-group">
+          <label>Food Item</label>
+          <input type="text" id="foodName" placeholder="e.g. dal makhani, idli, pizza slice" />
+        </div>
+        <div class="form-group">
+          <label>Portion</label>
+          <input type="text" id="foodPortion" placeholder="e.g. 1 bowl, 200g, 2 pieces" />
+        </div>
+      </div>
+      <div id="aiResultBox" class="ai-result-box"></div>
+      <div style="display:flex;gap:0.75rem;margin-top:0.85rem;flex-wrap:wrap">
+        <button class="btn-primary" onclick="analyzeFood()" id="analyzeBtn" style="flex:2;min-width:140px">
+          <i class="fas fa-wand-magic-sparkles"></i> Calculate Calories
+        </button>
+        <button class="btn-secondary" onclick="addFoodManual()" id="addManualBtn" style="flex:1;min-width:100px;display:none">
+          <i class="fas fa-plus"></i> Add Entry
+        </button>
+      </div>
+    </div>
+
+    <!-- Calorie Goal Setting -->
+    <div class="card">
+      <div class="card-title">Daily Calorie Goal</div>
+      <div class="input-row">
+        <div class="form-group">
+          <input type="number" id="goalInput" placeholder="e.g. 2000" min="500" max="5000" />
+        </div>
+        <button class="btn-secondary" onclick="saveGoal()" style="height:44px;margin-top:auto">Save Goal</button>
+      </div>
+    </div>
+
+    <!-- Today's Log -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <div class="card-title" style="margin-bottom:0">Today's Food Log</div>
+        <input type="date" id="logDate" onchange="loadDayLog()" style="border:1px solid var(--border);border-radius:6px;padding:0.3rem 0.6rem;font-size:0.82rem;color:var(--ink-soft)" />
+      </div>
+      <div id="foodLogList">
+        <p class="empty-state">No food logged yet today.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="../index.html" class="bnav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="weight.html" class="bnav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+    <a href="calories.html" class="bnav-link active"><i class="fas fa-utensils"></i><span>Calories</span></a>
+    <a href="coach.html" class="bnav-link"><i class="fas fa-robot"></i><span>AI Coach</span></a>
+  </nav>
+
+  <script src="../js/storage.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    let pendingFood = null;
+    let currentDate = Storage.today();
+
+    async function initCaloriePage() {
+      document.getElementById('logDate').value = currentDate;
+      const settings = await Storage.getSettings();
+      const goal = settings.calorieGoal || 2000;
+      document.getElementById('goalInput').value = goal;
+      document.getElementById('goalDisplay').textContent = goal;
+      await loadDayLog();
+    }
+
+    async function loadDayLog() {
+      currentDate = document.getElementById('logDate').value || Storage.today();
+      const [foods, settings] = await Promise.all([
+        Storage.getFoods(currentDate),
+        Storage.getSettings(),
+      ]);
+      const goal = settings.calorieGoal || 2000;
+      document.getElementById('goalDisplay').textContent = goal;
+      renderFoodLog(foods, goal);
+    }
+
+    function renderFoodLog(foods, goal) {
+      const total = foods.reduce((s, f) => s + (f.calories || 0), 0);
+      const pct   = Math.min(Math.round((total / goal) * 100), 100);
+      const over  = total > goal;
+
+      document.getElementById('totalCalories').textContent = Math.round(total);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressFill').className = 'progress-bar-fill' + (over ? ' over' : '');
+      document.getElementById('progressPct').textContent = pct + '%';
+      const rem = goal - Math.round(total);
+      document.getElementById('remainingCal').textContent = over
+        ? `${Math.abs(rem)} kcal over goal`
+        : `${rem} remaining`;
+
+      const el = document.getElementById('foodLogList');
+      if (!foods.length) {
+        el.innerHTML = '<p class="empty-state">No food logged for this day.</p>';
+        return;
+      }
+
+      const mealEmoji = { breakfast:'🌅', lunch:'☀️', dinner:'🌙', snack:'🍪', other:'🍽️' };
+      el.innerHTML = foods.map(f => `
+        <div class="food-entry">
+          <div class="food-entry-icon">${mealEmoji[f.meal] || '🍽️'}</div>
+          <div class="food-entry-info">
+            <div class="food-entry-name">${escHtml(f.name)}</div>
+            <div class="food-entry-portion">${escHtml(f.portion || '')}${f.meal ? ' · ' + f.meal : ''}</div>
+          </div>
+          <div class="food-entry-cal">${Math.round(f.calories)} kcal</div>
+          <button class="food-entry-del" onclick="deleteFood(${f.id})" title="Delete"><i class="fas fa-times"></i></button>
+        </div>
+      `).join('');
+
+      // Total row
+      el.innerHTML += `
+        <div style="display:flex;justify-content:flex-end;padding:0.75rem 0.5rem 0;border-top:1px solid var(--border);margin-top:0.5rem">
+          <strong style="color:var(--ink)">Total: ${Math.round(total)} kcal</strong>
+        </div>
+      `;
+    }
+
+    async function analyzeFood() {
+      const name    = document.getElementById('foodName').value.trim();
+      const portion = document.getElementById('foodPortion').value.trim();
+
+      if (!name) { showToast('Please enter a food item'); return; }
+
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+
+      const resultBox = document.getElementById('aiResultBox');
+      resultBox.className = 'ai-result-box show';
+      resultBox.innerHTML = '<span style="opacity:0.6">🤖 AI is calculating calories...</span>';
+
+      const prompt = `Calculate the approximate calorie content for:
+Food: ${name}
+Portion: ${portion || 'standard serving'}
+
+Respond ONLY in this exact JSON format (no markdown, no explanation):
+{
+  "calories": <number>,
+  "protein_g": <number>,
+  "carbs_g": <number>,
+  "fat_g": <number>,
+  "meal_type": "<breakfast|lunch|dinner|snack>",
+  "notes": "<brief note about the estimate>"
+}`;
+
+      try {
+        const rawReply = await callGroq([{ role: 'user', content: prompt }],
+          'You are a precise nutritionist. Always respond with valid JSON only. No markdown, no backticks, no explanation text — just the raw JSON object.');
+
+        // Parse JSON from response
+        let info;
+        try {
+          const cleaned = rawReply.replace(/```json|```/g, '').trim();
+          info = JSON.parse(cleaned);
+        } catch {
+          // Try extracting JSON from response
+          const match = rawReply.match(/\{[\s\S]*\}/);
+          if (match) info = JSON.parse(match[0]);
+          else throw new Error('Could not parse AI response');
+        }
+
+        pendingFood = {
+          name,
+          portion: portion || 'standard serving',
+          calories: info.calories,
+          protein: info.protein_g,
+          carbs: info.carbs_g,
+          fat: info.fat_g,
+          meal: info.meal_type,
+          date: currentDate,
+        };
+
+        resultBox.innerHTML = `
+          <div style="margin-bottom:0.6rem;font-weight:600;font-size:1rem">${escHtml(name)} ${portion ? '· ' + escHtml(portion) : ''}</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:0.6rem">
+            <div style="text-align:center;background:rgba(255,255,255,0.15);border-radius:8px;padding:0.5rem">
+              <div style="font-size:1.15rem;font-weight:700">${info.calories}</div>
+              <div style="font-size:0.7rem;opacity:0.7">kcal</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,0.15);border-radius:8px;padding:0.5rem">
+              <div style="font-size:1.15rem;font-weight:700">${info.protein_g}g</div>
+              <div style="font-size:0.7rem;opacity:0.7">protein</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,0.15);border-radius:8px;padding:0.5rem">
+              <div style="font-size:1.15rem;font-weight:700">${info.carbs_g}g</div>
+              <div style="font-size:0.7rem;opacity:0.7">carbs</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,0.15);border-radius:8px;padding:0.5rem">
+              <div style="font-size:1.15rem;font-weight:700">${info.fat_g}g</div>
+              <div style="font-size:0.7rem;opacity:0.7">fat</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem;opacity:0.75">💡 ${escHtml(info.notes || 'Estimate based on typical values')}</div>
+        `;
+
+        document.getElementById('addManualBtn').style.display = 'flex';
+
+      } catch (e) {
+        resultBox.innerHTML = `<span style="color:#ff9999">⚠️ Error: ${escHtml(e.message)}. Check your Groq API key.</span>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Calculate Calories';
+      }
+    }
+
+    async function addFoodManual() {
+      if (!pendingFood) return;
+      const addBtn = document.getElementById('addManualBtn');
+      addBtn.disabled = true;
+      addBtn.innerHTML = '<span class="spinner" style="border-top-color:var(--green-700)"></span>';
+
+      try {
+        await Storage.addFood(pendingFood);
+        showToast(`✓ "${pendingFood.name}" added — ${Math.round(pendingFood.calories)} kcal`);
+        pendingFood = null;
+        document.getElementById('foodName').value = '';
+        document.getElementById('foodPortion').value = '';
+        document.getElementById('aiResultBox').className = 'ai-result-box';
+        addBtn.style.display = 'none';
+        await loadDayLog();
+      } catch (e) {
+        showToast('Error saving food entry');
+      } finally {
+        addBtn.disabled = false;
+        addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Entry';
+      }
+    }
+
+    async function deleteFood(id) {
+      await Storage.deleteFood(id);
+      showToast('Entry removed');
+      await loadDayLog();
+    }
+
+    async function saveGoal() {
+      const goal = parseInt(document.getElementById('goalInput').value);
+      if (!goal || goal < 500 || goal > 5000) {
+        showToast('Enter a valid goal (500–5000 kcal)');
+        return;
+      }
+      await Storage.saveSettings({ calorieGoal: goal });
+      document.getElementById('goalDisplay').textContent = goal;
+      showToast('✓ Goal saved!');
+      await loadDayLog();
+    }
+
+    // Enter key shortcut
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && (document.activeElement.id === 'foodName' || document.activeElement.id === 'foodPortion')) {
+        if (pendingFood) addFoodManual();
+        else analyzeFood();
+      }
+    });
+
+    initCaloriePage();
+  </script>
+</body>
+</html>

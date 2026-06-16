@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weight Log — VitalGreen</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="../index.html" style="display:flex;align-items:center;gap:0.5rem;color:inherit;">
+        <span class="brand-leaf">🌿</span>
+        <span class="brand-name">VitalGreen</span>
+      </a>
+    </div>
+    <div class="nav-links">
+      <a href="../index.html" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
+      <a href="weight.html" class="nav-link active"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+      <a href="calories.html" class="nav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+      <a href="coach.html" class="nav-link"><i class="fas fa-robot"></i><span>AI Coach</span></a>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Weight Log</h1>
+      <p class="page-sub">Track your weight and monitor your BMI over time.</p>
+    </div>
+
+    <!-- BMI Banner -->
+    <div id="bmiBanner" class="bmi-banner" style="display:none">
+      <div class="bmi-score" id="bmiScore">—</div>
+      <div class="bmi-details">
+        <div class="bmi-label" id="bmiLabel">—</div>
+        <div class="bmi-range" id="bmiRange">Set your height in settings below</div>
+      </div>
+    </div>
+
+    <!-- Log Weight Card -->
+    <div class="card">
+      <div class="card-title">Log Today's Weight</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label>Weight (kg)</label>
+          <input type="number" id="weightInput" placeholder="e.g. 72.5" step="0.1" min="20" max="300" />
+        </div>
+        <div class="form-group" style="max-width:140px">
+          <label>Date</label>
+          <input type="date" id="weightDate" />
+        </div>
+      </div>
+      <button class="btn-primary" onclick="logWeight()" id="logWeightBtn">
+        <i class="fas fa-plus"></i> Log Weight
+      </button>
+    </div>
+
+    <!-- Height Setting -->
+    <div class="card">
+      <div class="card-title">Your Height (for BMI)</div>
+      <div class="input-row">
+        <div class="form-group">
+          <label>Height (cm)</label>
+          <input type="number" id="heightInput" placeholder="e.g. 175" min="100" max="250" />
+        </div>
+        <button class="btn-secondary" onclick="saveHeight()" style="height:44px;margin-top:auto">Save</button>
+      </div>
+    </div>
+
+    <!-- Weight Chart -->
+    <div class="card">
+      <div class="card-title">Progress Chart</div>
+      <canvas id="weightChart" height="200"></canvas>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <div class="card-title">History</div>
+      <div id="weightHistory" class="weight-history">
+        <p class="empty-state">No entries yet. Log your first weight above!</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="../index.html" class="bnav-link"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="weight.html" class="bnav-link active"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
+    <a href="calories.html" class="bnav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+    <a href="coach.html" class="bnav-link"><i class="fas fa-robot"></i><span>AI Coach</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../js/storage.js"></script>
+  <script src="../js/app.js"></script>
+  <script>
+    let weightChart = null;
+
+    async function initWeightPage() {
+      // Set default date to today
+      document.getElementById('weightDate').value = Storage.today();
+
+      // Load height
+      const settings = await Storage.getSettings();
+      if (settings.heightCm) {
+        document.getElementById('heightInput').value = settings.heightCm;
+      }
+
+      await refreshWeightData();
+    }
+
+    async function refreshWeightData() {
+      const [weights, settings] = await Promise.all([
+        Storage.getWeights(),
+        Storage.getSettings(),
+      ]);
+
+      renderBMI(weights, settings);
+      renderWeightHistory(weights);
+      renderWeightChart(weights.slice(0, 30).reverse());
+    }
+
+    async function logWeight() {
+      const kg   = parseFloat(document.getElementById('weightInput').value);
+      const date = document.getElementById('weightDate').value;
+
+      if (!kg || kg < 20 || kg > 300) {
+        showToast('Please enter a valid weight (20–300 kg)');
+        return;
+      }
+
+      const btn = document.getElementById('logWeightBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        await Storage.addWeight(kg, date);
+        document.getElementById('weightInput').value = '';
+        showToast('✓ Weight logged!');
+        await refreshWeightData();
+      } catch (e) {
+        showToast('Error saving. Check your token.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Log Weight';
+      }
+    }
+
+    async function saveHeight() {
+      const h = parseFloat(document.getElementById('heightInput').value);
+      if (!h || h < 100 || h > 250) {
+        showToast('Enter a valid height (100–250 cm)');
+        return;
+      }
+      await Storage.saveSettings({ heightCm: h });
+      showToast('✓ Height saved!');
+      await refreshWeightData();
+    }
+
+    async function deleteWeight(id) {
+      await Storage.deleteWeight(id);
+      showToast('Entry deleted');
+      await refreshWeightData();
+    }
+
+    function renderBMI(weights, settings) {
+      const banner = document.getElementById('bmiBanner');
+      if (!banner) return;
+      if (weights.length === 0 || !settings.heightCm) {
+        banner.style.display = 'none';
+        return;
+      }
+      banner.style.display = 'flex';
+      const heightM = settings.heightCm / 100;
+      const bmi = (weights[0].kg / (heightM * heightM)).toFixed(1);
+      document.getElementById('bmiScore').textContent = bmi;
+      const cat = bmiCategory(parseFloat(bmi));
+      document.getElementById('bmiLabel').textContent = cat;
+      document.getElementById('bmiRange').textContent =
+        `Based on ${weights[0].kg} kg and ${settings.heightCm} cm`;
+
+      banner.className = 'bmi-banner';
+      if (parseFloat(bmi) < 18.5) banner.classList.add('underweight');
+      else if (parseFloat(bmi) >= 30) banner.classList.add('obese');
+      else if (parseFloat(bmi) >= 25) banner.classList.add('overweight');
+    }
+
+    function renderWeightHistory(weights) {
+      const el = document.getElementById('weightHistory');
+      if (!el) return;
+      if (weights.length === 0) {
+        el.innerHTML = '<p class="empty-state">No entries yet. Log your first weight above!</p>';
+        return;
+      }
+      el.innerHTML = weights.slice(0, 20).map((w, i) => {
+        const prev = weights[i + 1];
+        let deltaHtml = '';
+        if (prev) {
+          const diff = (w.kg - prev.kg).toFixed(1);
+          const sign = diff > 0 ? '+' : '';
+          const cls = diff <= 0 ? 'delta-down' : 'delta-up';
+          deltaHtml = `<span class="weight-entry-delta ${cls}">${sign}${diff}</span>`;
+        }
+        const d = new Date(w.date);
+        const dateStr = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        return `
+          <div class="weight-entry">
+            <span class="weight-entry-date">${dateStr}</span>
+            <span class="weight-entry-val">${w.kg} kg</span>
+            ${deltaHtml}
+            <button class="weight-entry-del" onclick="deleteWeight(${w.id})" title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderWeightChart(weights) {
+      const canvas = document.getElementById('weightChart');
+      if (!canvas) return;
+
+      if (weightChart) { weightChart.destroy(); weightChart = null; }
+
+      if (weights.length < 2) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f4faf7';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#6b8070';
+        ctx.font = '14px DM Sans, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Log at least 2 entries to see chart', canvas.width / 2, 105);
+        return;
+      }
+
+      const labels = weights.map(w => {
+        const d = new Date(w.date);
+        return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      });
+      const values = weights.map(w => w.kg);
+
+      weightChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Weight (kg)',
+            data: values,
+            borderColor: '#2d8a55',
+            backgroundColor: 'rgba(45,138,85,0.08)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#2d8a55',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#2d8a55',
+            pointHoverBorderWidth: 2,
+            pointRadius: 5,
+            tension: 0.4,
+            fill: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(13,43,26,0.9)',
+              padding: 12,
+              cornerRadius: 10,
+              callbacks: { label: ctx => ` ${ctx.raw} kg` }
+            }
+          },
+          scales: {
+            y: {
+              grid: { color: 'rgba(0,0,0,0.04)' },
+              ticks: { font: { family: 'DM Sans' }, color: '#6b8070', callback: v => v + ' kg' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: 'DM Sans' }, color: '#6b8070', maxRotation: 45 }
+            }
+          }
+        }
+      });
+    }
+
+    initWeightPage();
+  </script>
+</body>
+</html>
