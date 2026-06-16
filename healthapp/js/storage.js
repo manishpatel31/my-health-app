@@ -170,6 +170,15 @@ const Storage = (() => {
     data.walks = [walk, ...(data.walks||[])];
     await saveData(data); return walk;
   }
+  // Set the TOTAL steps for a given day (replaces any existing entry for that date)
+  async function setSteps(steps, caloriesBurned, date) {
+    const data = await loadData();
+    const d = date || today();
+    data.walks = (data.walks||[]).filter(w => w.date !== d);
+    const walk = { id: Date.now(), steps: parseInt(steps)||0, caloriesBurned: caloriesBurned||0, date: d, ts: Date.now() };
+    data.walks = [walk, ...data.walks];
+    await saveData(data); return walk;
+  }
   async function deleteWalk(id) {
     const data = await loadData();
     data.walks = (data.walks||[]).filter(w => w.id !== id);
@@ -201,7 +210,7 @@ const Storage = (() => {
     addWeight, deleteWeight, getWeights,
     addFood, deleteFood, getFoods,
     getFoodLibrary, deleteFoodFromLibrary,
-    addWalk, deleteWalk, getWalks,
+    addWalk, setSteps, deleteWalk, getWalks,
     getSettings, saveSettings,
     today,
   };

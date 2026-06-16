@@ -23,18 +23,23 @@
 
 <main class="main-content">
   <div class="page-header">
-    <h1 class="page-title">Walk Tracker</h1>
+    <h1 class="page-title">🚶 Walk Tracker</h1>
     <p class="page-sub">Log your steps and track calories burned walking</p>
   </div>
 
   <!-- Steps Ring Today -->
   <div class="card" id="stepsToday">
-    <div class="card-title">Today's Steps</div>
+    <div class="card-title">👟 Today's Steps</div>
     <div class="steps-ring-wrap">
       <div class="steps-ring">
-        <svg viewBox="0 0 80 80" width="80" height="80">
-          <circle cx="40" cy="40" r="32" fill="none" stroke="var(--green-100)" stroke-width="8"/>
-          <circle cx="40" cy="40" r="32" fill="none" stroke="var(--green-400)" stroke-width="8"
+        <svg viewBox="0 0 80 80" width="96" height="96">
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#9b59b6"/><stop offset="100%" stop-color="#38c47d"/>
+            </linearGradient>
+          </defs>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(155,89,182,0.15)" stroke-width="8"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="url(#ringGrad)" stroke-width="8"
             stroke-linecap="round" stroke-dasharray="201" id="stepsArc" stroke-dashoffset="201"/>
         </svg>
         <div class="steps-ring-num" id="stepsRingNum">0</div>
@@ -48,36 +53,27 @@
     <div class="progress-bar-wrap"><div class="progress-bar-fill" id="stepsProgress" style="width:0%;background:linear-gradient(90deg,#9b59b6,#c39bd3)"></div></div>
   </div>
 
-  <!-- Log Walk -->
+  <!-- Log Steps -->
   <div class="goal-card">
-    <h3><i class="fas fa-person-walking" style="margin-right:0.5rem;opacity:0.7"></i>Log a Walk</h3>
+    <h3><i class="fas fa-shoe-prints" style="margin-right:0.5rem;opacity:0.7"></i>👟 Log Today's Steps</h3>
+    <p style="font-size:0.8rem;opacity:0.85;margin-bottom:0.9rem;position:relative;z-index:1">Just enter your total steps for the day — we'll do the rest 🔥</p>
     <div class="form-row" style="margin-bottom:0.75rem">
-      <div class="form-group">
-        <label>Steps</label>
-        <input type="number" id="walkSteps" placeholder="e.g. 4500" min="1" max="100000"/>
-      </div>
-      <div class="form-group">
-        <label>Duration (min)</label>
-        <input type="number" id="walkDuration" placeholder="e.g. 45" min="1" max="600"/>
-      </div>
-    </div>
-    <div class="form-row" style="margin-bottom:0.75rem">
-      <div class="form-group">
-        <label>Distance (km)</label>
-        <input type="number" id="walkDistance" placeholder="e.g. 3.5" step="0.1" min="0.1"/>
+      <div class="form-group" style="flex:2">
+        <label>Total Steps Today</label>
+        <input type="number" id="walkSteps" placeholder="e.g. 8500" min="0" max="100000" inputmode="numeric"/>
       </div>
       <div class="form-group">
         <label>Date</label>
         <input type="date" id="walkDate"/>
       </div>
     </div>
-    <div id="walkCalPreview" style="background:rgba(255,255,255,0.12);border-radius:8px;padding:0.65rem 0.9rem;margin-bottom:0.75rem;font-size:0.85rem;display:none"></div>
-    <button class="btn-primary" onclick="logWalk()" id="logWalkBtn"><i class="fas fa-plus"></i> Log Walk</button>
+    <div id="walkCalPreview" style="background:rgba(255,255,255,0.16);border-radius:10px;padding:0.7rem 0.95rem;margin-bottom:0.85rem;font-size:0.86rem;display:none;position:relative;z-index:1"></div>
+    <button class="btn-primary" onclick="logWalk()" id="logWalkBtn"><i class="fas fa-check"></i> Save Steps</button>
   </div>
 
   <!-- Goals Settings -->
   <div class="card">
-    <div class="card-title">Walk Goals & Plans</div>
+    <div class="card-title">🎯 Walk Goals & Plans</div>
     <div class="form-row">
       <div class="form-group">
         <label>Daily Steps Goal</label>
@@ -101,7 +97,7 @@
 
   <!-- Walk History -->
   <div class="card">
-    <div class="card-title">Walk History</div>
+    <div class="card-title">📜 Walk History</div>
     <div id="walkHistory"><p class="empty-state">No walks logged yet. Start walking!</p></div>
   </div>
 </main>
@@ -109,8 +105,10 @@
 <nav class="bottom-nav">
   <a href="../index.html" class="bnav-link"><i class="fas fa-home"></i><span>Home</span></a>
   <a href="calories.html" class="bnav-link"><i class="fas fa-utensils"></i><span>Calories</span></a>
+  <a href="weight.html" class="bnav-link"><i class="fas fa-weight-scale"></i><span>Weight</span></a>
   <a href="walk.html" class="bnav-link active"><i class="fas fa-person-walking"></i><span>Walk</span></a>
   <a href="insights.html" class="bnav-link"><i class="fas fa-chart-line"></i><span>Insights</span></a>
+  <a href="tips.html" class="bnav-link"><i class="fas fa-lightbulb"></i><span>Tips</span></a>
   <a href="coach.html" class="bnav-link"><i class="fas fa-robot"></i><span>Coach</span></a>
 </nav>
 
@@ -118,15 +116,24 @@
 <script src="../js/app.js"></script>
 <script>
 async function initWalkPage() {
-  document.getElementById('walkDate').value = Storage.today();
+  const dateEl = document.getElementById('walkDate');
+  dateEl.value = Storage.today();
   const settings = await Storage.getSettings();
   if (settings.dailyStepsGoal) document.getElementById('stepsGoalInput').value = settings.dailyStepsGoal;
   if (settings.walkMinsGoal) document.getElementById('walkMinsGoal').value = settings.walkMinsGoal;
   await refreshWalkData();
-  // Preview calories on input
-  ['walkSteps','walkDuration','walkDistance'].forEach(id => {
-    document.getElementById(id).addEventListener('input', previewCalories);
-  });
+  await prefillStepsForDate();
+  document.getElementById('walkSteps').addEventListener('input', previewCalories);
+  dateEl.addEventListener('change', prefillStepsForDate);
+}
+
+// Pre-fill the input with steps already saved for the selected date (so editing replaces, not stacks)
+async function prefillStepsForDate() {
+  const date = document.getElementById('walkDate').value || Storage.today();
+  const walks = await Storage.getWalks(date);
+  const existing = walks.reduce((s,w)=>s+(w.steps||0),0);
+  document.getElementById('walkSteps').value = existing || '';
+  previewCalories();
 }
 
 async function refreshWalkData() {
@@ -156,40 +163,31 @@ function stepsToCalories(steps, weightKg) {
 
 async function previewCalories() {
   const steps = parseInt(document.getElementById('walkSteps').value) || 0;
-  const mins = parseInt(document.getElementById('walkDuration').value) || 0;
-  if (!steps && !mins) { document.getElementById('walkCalPreview').style.display='none'; return; }
-  const settings = await Storage.getSettings();
+  const preview = document.getElementById('walkCalPreview');
+  if (!steps) { preview.style.display='none'; return; }
   const weights = await Storage.getWeights();
   const wkg = weights[0]?.kg || 70;
-  const calFromSteps = stepsToCalories(steps, wkg);
-  const calFromTime = Math.round(mins * 4.5 * (wkg/70)); // ~4.5 MET walking
-  const cal = steps ? calFromSteps : calFromTime;
-  const preview = document.getElementById('walkCalPreview');
+  const cal = stepsToCalories(steps, wkg);
+  const km = (steps * 0.000762).toFixed(1); // ~0.762m average step length
   preview.style.display = 'block';
-  preview.innerHTML = `🔥 Estimated calories burned: <strong>${cal} kcal</strong>${steps ? ` from ${steps.toLocaleString()} steps` : ` from ${mins} min walk`}`;
+  preview.innerHTML = `🔥 <strong>${cal} kcal</strong> burned &nbsp;·&nbsp; 📏 ~${km} km &nbsp;·&nbsp; 👣 ${steps.toLocaleString()} steps`;
 }
 
 async function logWalk() {
   const steps = parseInt(document.getElementById('walkSteps').value) || 0;
-  const duration = parseInt(document.getElementById('walkDuration').value) || 0;
-  const distance = parseFloat(document.getElementById('walkDistance').value) || 0;
   const date = document.getElementById('walkDate').value || Storage.today();
-  if (!steps && !duration) { showToast('Enter steps or duration'); return; }
-  const settings = await Storage.getSettings();
+  if (steps < 0 || isNaN(steps)) { showToast('Enter your total steps'); return; }
   const weights = await Storage.getWeights();
   const wkg = weights[0]?.kg || 70;
-  const caloriesBurned = steps ? stepsToCalories(steps, wkg) : Math.round(duration * 4.5 * (wkg/70));
+  const caloriesBurned = stepsToCalories(steps, wkg);
   const btn = document.getElementById('logWalkBtn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span>';
   try {
-    await Storage.addWalk({ steps, duration, distance, caloriesBurned, date });
-    showToast(`✓ Walk logged! ~${caloriesBurned} kcal burned`);
-    document.getElementById('walkSteps').value = '';
-    document.getElementById('walkDuration').value = '';
-    document.getElementById('walkDistance').value = '';
+    await Storage.setSteps(steps, caloriesBurned, date);
+    showToast(`✓ ${steps.toLocaleString()} steps saved! ~${caloriesBurned} kcal 🔥`);
     document.getElementById('walkCalPreview').style.display = 'none';
     await refreshWalkData();
-  } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-plus"></i> Log Walk'; }
+  } finally { btn.disabled=false; btn.innerHTML='<i class="fas fa-check"></i> Save Steps'; }
 }
 
 async function saveWalkGoals() {
@@ -230,11 +228,11 @@ function renderWalkHistory(walks) {
   el.innerHTML = walks.map(w => {
     const d = new Date(w.date);
     const dateStr = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    const steps = w.steps || 0;
     return `<div class="weight-entry">
-      <span class="weight-entry-date">${dateStr}</span>
-      <span style="font-size:0.85rem;color:var(--ink)">${w.steps ? w.steps.toLocaleString()+' steps' : w.duration+' min'}</span>
-      ${w.distance ? `<span style="font-size:0.78rem;color:var(--muted)">${w.distance}km</span>` : ''}
-      <span style="font-size:0.78rem;color:var(--accent)">${w.caloriesBurned ? '~'+w.caloriesBurned+' kcal' : ''}</span>
+      <span class="weight-entry-date">📅 ${dateStr}</span>
+      <span style="font-size:0.88rem;color:var(--ink);font-weight:600">👣 ${steps.toLocaleString()} steps</span>
+      <span style="font-size:0.78rem;color:var(--accent)">${w.caloriesBurned ? '🔥 '+w.caloriesBurned+' kcal' : ''}</span>
       <button class="weight-entry-del" onclick="deleteWalk(${w.id})"><i class="fas fa-trash-alt"></i></button>
     </div>`;
   }).join('');
