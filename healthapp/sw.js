@@ -1,5 +1,5 @@
 // VitalGreen service worker — offline app shell + runtime caching
-const CACHE = 'vitalgreen-v5';
+const CACHE = 'vitalgreen-v6';
 const BASE = new URL('./', self.location).pathname; // works under any subpath (e.g. GitHub Pages)
 
 const SHELL = [
@@ -16,6 +16,7 @@ const SHELL = [
   'pages/insights.html',
   'pages/tips.html',
   'pages/coach.html',
+  'pages/changelog.html',
 ].map(p => BASE + p);
 
 self.addEventListener('install', e => {
