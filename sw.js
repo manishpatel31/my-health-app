@@ -1,5 +1,5 @@
 // VitalGreen service worker — offline app shell + runtime caching
-const CACHE = 'vitalgreen-v6';
+const CACHE = 'vitalgreen-v7';
 const BASE = new URL('./', self.location).pathname; // works under any subpath (e.g. GitHub Pages)
 
 const SHELL = [
@@ -7,6 +7,7 @@ const SHELL = [
   'css/style.css',
   'js/app.js',
   'js/storage.js',
+  'js/foodDatabase.js',
   'manifest.json',
   'icons/icon-192.png',
   'icons/icon-512.png',

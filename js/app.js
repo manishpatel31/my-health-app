@@ -149,14 +149,17 @@ async function initDashboard() {
     }
   }
 
-  renderFoodPreview(foods);
-  renderMiniWeightChart(weights.slice(0,14).reverse());
-  renderEnergyCard(weights, settings);
-  renderStreakCard(allFoods, allWalks, allWater, weights);
-  renderWaterWidget(allWater, settings);
-  renderCalorieTrend(allFoods, settings);
+  // Render the daily insight banner first and isolate every widget below in its own
+  // try/catch — one widget throwing (e.g. a chart issue) must never blank out the rest
+  // of the dashboard, including this banner.
   _dashSnapshot = { weights, foods, settings, walksToday: walks };
-  renderDailyInsightBanner();
+  try { renderDailyInsightBanner(); } catch(e) { console.error('renderDailyInsightBanner failed', e); }
+  try { renderFoodPreview(foods); } catch(e) { console.error('renderFoodPreview failed', e); }
+  try { renderMiniWeightChart(weights.slice(0,14).reverse()); } catch(e) { console.error('renderMiniWeightChart failed', e); }
+  try { renderEnergyCard(weights, settings); } catch(e) { console.error('renderEnergyCard failed', e); }
+  try { renderStreakCard(allFoods, allWalks, allWater, weights); } catch(e) { console.error('renderStreakCard failed', e); }
+  try { renderWaterWidget(allWater, settings); } catch(e) { console.error('renderWaterWidget failed', e); }
+  try { renderCalorieTrend(allFoods, settings); } catch(e) { console.error('renderCalorieTrend failed', e); }
 }
 
 // ===== ENERGY / DEFICIT CARD (TDEE → how much to eat to hit your goal) =====
