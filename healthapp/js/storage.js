@@ -41,6 +41,7 @@ const Storage = (() => {
         calorieGoal: 2000,
         heightCm: null,
         targetWeightKg: null,
+        targetDateISO: null,   // date by which the user wants to hit targetWeightKg
         weeklyLossKg: 0.5,
         dailyStepsGoal: 8000,
         waterGoalGlasses: 8,
@@ -77,6 +78,7 @@ const Storage = (() => {
       if (!data.settings.dailyStepsGoal) data.settings.dailyStepsGoal = 8000;
       if (!data.settings.waterGoalGlasses) data.settings.waterGoalGlasses = 8;
       if (!data.settings.targetWeightKg) data.settings.targetWeightKg = null;
+      if (data.settings.targetDateISO === undefined) data.settings.targetDateISO = null;
       if (!data.settings.weeklyLossKg) data.settings.weeklyLossKg = 0.5;
       setCache(data);
       return data;
@@ -214,7 +216,7 @@ const Storage = (() => {
   // ---- Settings ----
   async function getSettings() {
     const d = await loadData();
-    return { calorieGoal:2000, heightCm:null, targetWeightKg:null, weeklyLossKg:0.5,
+    return { calorieGoal:2000, heightCm:null, targetWeightKg:null, targetDateISO:null, weeklyLossKg:0.5,
       dailyStepsGoal:8000, waterGoalGlasses:8, activityLevel:'moderate', age:null, gender:'male',
       ...d.settings };
   }
