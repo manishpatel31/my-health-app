@@ -47,13 +47,48 @@
 
   <!-- Tabs -->
   <div class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('ai',this)">🤖 AI Log</button>
+    <button class="tab-btn active" onclick="switchTab('browse',this)">🍽️ Browse Dishes</button>
+    <button class="tab-btn" onclick="switchTab('ai',this)">🤖 AI Log</button>
     <button class="tab-btn" onclick="switchTab('library',this)">📚 My Foods</button>
     <button class="tab-btn" onclick="switchTab('log',this)">📋 Today's Log</button>
   </div>
 
+  <!-- Meal builder: items pending before saving (shared across Browse + AI Log tabs) -->
+  <div class="card" id="mealBuilder" style="display:none">
+    <div class="card-header">
+      <div class="card-title" style="margin-bottom:0">🍱 This Meal</div>
+      <span id="mealTotals" style="font-size:0.78rem;color:var(--muted)"></span>
+    </div>
+    <div id="mealItemsList"></div>
+    <button class="btn-primary" onclick="saveMeal()" id="saveMealBtn" style="margin-top:0.85rem">
+      <i class="fas fa-floppy-disk"></i> Save Meal to Log
+    </button>
+  </div>
+
+  <!-- TAB: Browse Dishes -->
+  <div id="tab-browse">
+    <div class="food-input-card">
+      <h3><i class="fas fa-list" style="margin-right:0.5rem;opacity:0.7"></i>Pick a dish and quantity — instant, exact values from the database</h3>
+      <div class="form-group" style="margin-bottom:0.75rem">
+        <label>Meal Type</label>
+        <select id="browseMealType">
+          <option value="breakfast">🌅 Breakfast</option>
+          <option value="lunch">☀️ Lunch</option>
+          <option value="dinner">🌙 Dinner</option>
+          <option value="snack">🍪 Snack</option>
+        </select>
+      </div>
+      <div class="search-bar form-group" style="margin-bottom:0.6rem">
+        <input type="text" id="browseSearch" placeholder="Search dishes..." oninput="renderBrowseList()" style="padding-left:2.2rem"/>
+      </div>
+      <div id="browseCategoryChips" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.75rem"></div>
+      <div id="browseList"></div>
+      <p style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem">Can't find your dish? Switch to the <strong>AI Log</strong> tab — it checks the database first, then asks AI only if needed.</p>
+    </div>
+  </div>
+
   <!-- TAB: AI Log -->
-  <div id="tab-ai">
+  <div id="tab-ai" style="display:none">
     <div class="food-input-card">
       <h3><i class="fas fa-wand-magic-sparkles" style="margin-right:0.5rem;opacity:0.7"></i>List everything you ate — add a row per item, then analyze together</h3>
       <div class="form-group" style="margin-bottom:0.75rem">
@@ -80,18 +115,6 @@
           <i class="fas fa-wand-magic-sparkles"></i> Analyze All Items
         </button>
       </div>
-    </div>
-
-    <!-- Meal builder: items pending before saving -->
-    <div class="card" id="mealBuilder" style="display:none">
-      <div class="card-header">
-        <div class="card-title" style="margin-bottom:0">🍱 This Meal</div>
-        <span id="mealTotals" style="font-size:0.78rem;color:var(--muted)"></span>
-      </div>
-      <div id="mealItemsList"></div>
-      <button class="btn-primary" onclick="saveMeal()" id="saveMealBtn" style="margin-top:0.85rem">
-        <i class="fas fa-floppy-disk"></i> Save Meal to Log
-      </button>
     </div>
   </div>
 
@@ -150,7 +173,7 @@ let currentDate = Storage.today();
 let libraryData = [];
 
 function switchTab(name, btn) {
-  ['ai','library','log'].forEach(t => {
+  ['browse','ai','library','log'].forEach(t => {
     document.getElementById('tab-'+t).style.display = t===name ? 'block' : 'none';
   });
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -169,10 +192,60 @@ async function initCaloriePage() {
   const h = new Date().getHours();
   const meal = h < 10 ? 'breakfast' : h < 14 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
   document.getElementById('mealType').value = meal;
+  document.getElementById('browseMealType').value = meal;
   await loadDayLog();
   await loadFoodOptions();
+  renderBrowseCategoryChips();
+  renderBrowseList();
   // start with a few empty rows so it's clear multiple items are supported
   addEntryRow(); addEntryRow(); addEntryRow();
+}
+
+// ---- Browse Dishes tab ----
+let browseCategory = 'all';
+
+function renderBrowseCategoryChips() {
+  const el = document.getElementById('browseCategoryChips');
+  const cats = [{key:'all',label:'All'}, ...FoodDB.categories.map(c => ({key:c, label:FoodDB.categoryLabels[c]}))];
+  el.innerHTML = cats.map(c => `<button type="button" class="btn-secondary" style="padding:0.35rem 0.7rem;font-size:0.78rem;${browseCategory===c.key?'background:var(--accent,#1c6b44);color:#fff':''}" onclick="setBrowseCategory('${c.key}')">${c.label}</button>`).join('');
+}
+
+function setBrowseCategory(key) { browseCategory = key; renderBrowseCategoryChips(); renderBrowseList(); }
+
+function renderBrowseList() {
+  const q = (document.getElementById('browseSearch').value||'').trim().toLowerCase();
+  const el = document.getElementById('browseList');
+  const items = FoodDB.list().filter(d => (browseCategory==='all'||d.cat===browseCategory) && (!q || d.label.toLowerCase().includes(q)));
+  if (!items.length) { el.innerHTML = '<p class="empty-state">No dishes match — try the AI Log tab.</p>'; return; }
+  el.innerHTML = items.map(d => `
+    <div class="dish-row" style="display:flex;align-items:center;gap:0.5rem;padding:0.55rem 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500">${escHtml(d.label)}</div>
+        <div style="font-size:0.74rem;color:var(--muted)">${escHtml(d.entry.portion)} · ${d.entry.calories} kcal</div>
+      </div>
+      <input type="number" class="dishQty" data-label="${escHtml(d.label)}" value="1" min="0.25" step="0.25"
+        style="width:55px;padding:0.35rem;border:1px solid var(--border);border-radius:6px;text-align:center"/>
+      <button type="button" class="btn-secondary" style="padding:0.4rem 0.7rem" onclick="addDishFromBrowse(this)" title="Add to meal"><i class="fas fa-plus"></i></button>
+    </div>`).join('');
+}
+
+function addDishFromBrowse(btn) {
+  const row = btn.closest('.dish-row');
+  const qtyInput = row.querySelector('.dishQty');
+  const label = qtyInput.dataset.label;
+  const qty = parseFloat(qtyInput.value) || 1;
+  const match = FoodDB.find(label);
+  if (!match) return;
+  const meal = document.getElementById('browseMealType').value;
+  mealItems.push({
+    name: label, portion: `${qty}x ${match.portion}`,
+    calories: round1(match.calories*qty), protein: round1(match.protein*qty),
+    carbs: round1(match.carbs*qty), fat: round1(match.fat*qty),
+    meal, date: currentDate,
+  });
+  renderMealBuilder();
+  document.getElementById('mealBuilder').scrollIntoView({behavior:'smooth',block:'nearest'});
+  showToast(`✓ Added ${label}`);
 }
 
 // Populate the <datalist> so each row input suggests your saved foods
