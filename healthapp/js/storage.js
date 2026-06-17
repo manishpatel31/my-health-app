@@ -3,6 +3,15 @@ const GIST_FILENAME = 'vitalgreen-data.json';
 
 const Storage = (() => {
 
+  let _online = true;        // false once a gist read fails, to block destructive writes
+  let _lastError = null;
+
+  function _notify(msg) {
+    _lastError = msg;
+    if (typeof showToast === 'function') showToast(msg);
+    else console.warn('[VitalGreen]', msg);
+  }
+
   function getConfig() {
     return {
       token:    localStorage.getItem('vg_gh_token'),
@@ -70,9 +79,19 @@ const Storage = (() => {
     }
     try {
       const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders() });
-      if (!res.ok) throw new Error('not found');
+      if (!res.ok) {
+        // 401/403 = token problem (often a fine-grained token, which can't read gists),
+        // 404 = wrong gist id or this token can't see it. Don't silently fall back to empty.
+        const hint = (res.status === 401 || res.status === 403)
+          ? 'GitHub rejected your token — use a CLASSIC token with the "gist" scope (fine-grained tokens can\'t access gists).'
+          : (res.status === 404)
+          ? 'That Gist ID was not found for this token. Check the Gist ID and that the token belongs to the same GitHub account.'
+          : `Couldn't reach GitHub (HTTP ${res.status}).`;
+        throw new Error(hint);
+      }
       const gist = await res.json();
       const content = gist.files[GIST_FILENAME]?.content;
+      _online = true;
       if (!content) return defaultData();
       const data = JSON.parse(content);
       // migrate old data
@@ -87,7 +106,11 @@ const Storage = (() => {
       setCache(data);
       return data;
     } catch(e) {
-      console.warn('Gist load failed, using cache', e);
+      _online = false;
+      console.warn('Gist load failed', e);
+      _notify('⚠️ Sync error: ' + e.message);
+      // Return cache so the UI still shows the last-known data, but _online=false
+      // will block writes so we never clobber the remote gist with stale/empty data.
       const c = getCache();
       return Object.keys(c).length ? c : defaultData();
     }
@@ -95,16 +118,53 @@ const Storage = (() => {
 
   async function saveData(data) {
     const { token, gistId } = getConfig();
+    if (!token) { setCache(data); return; }
+    // If our last read of the gist failed, refuse to write — otherwise we'd overwrite
+    // the real (working) data on another device with an empty/stale copy.
+    if (gistId && !_online) {
+      _notify('⚠️ Not saved — can\'t reach your Gist. Fix the sync error first so your data isn\'t overwritten.');
+      return;
+    }
     setCache(data);
-    if (!token) return;
     const body = { files: { [GIST_FILENAME]: { content: JSON.stringify(data, null, 2) } } };
     if (!gistId) { await createGist(data); return; }
     try {
-      await fetch(`https://api.github.com/gists/${gistId}`, {
+      const res = await fetch(`https://api.github.com/gists/${gistId}`, {
         method: 'PATCH', headers: await ghHeaders(), body: JSON.stringify(body)
       });
-    } catch(e) { console.warn('Gist save failed', e); }
+      if (!res.ok) { _online = false; throw new Error(`HTTP ${res.status}`); }
+    } catch(e) {
+      console.warn('Gist save failed', e);
+      _notify('⚠️ Save failed — your latest change may not be synced.');
+    }
   }
+
+  // Validate the configured token (and gist id, if any) actually work, returning a
+  // human-readable result so setup can tell the user exactly what's wrong.
+  async function testConnection() {
+    const { token, gistId } = getConfig();
+    if (!token) return { ok: false, message: 'No GitHub token set.' };
+    try {
+      // /gists requires the gist scope; this catches fine-grained / wrong-scope tokens.
+      const res = await fetch('https://api.github.com/gists?per_page=1', { headers: await ghHeaders() });
+      if (res.status === 401) return { ok: false, message: 'Token is invalid or expired.' };
+      if (res.status === 403) return { ok: false, message: 'Token lacks gist access. Use a CLASSIC token with the "gist" scope (fine-grained tokens can\'t access gists).' };
+      if (!res.ok) return { ok: false, message: `GitHub error (HTTP ${res.status}).` };
+      if (gistId) {
+        const r2 = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders() });
+        if (r2.status === 404) return { ok: false, message: 'Gist ID not found for this token/account.' };
+        if (!r2.ok) return { ok: false, message: `Couldn't open that Gist (HTTP ${r2.status}).` };
+        return { ok: true, message: 'Connected — syncing to your saved Gist.', gistId };
+      }
+      const found = await findExistingGist();
+      if (found) { localStorage.setItem('vg_gist_id', found); return { ok: true, message: 'Connected — found and linked your existing Gist.', gistId: found }; }
+      return { ok: true, message: 'Connected — a new Gist will be created for your data.' };
+    } catch (e) {
+      return { ok: false, message: 'Network error reaching GitHub: ' + e.message };
+    }
+  }
+
+  function getStatus() { return { online: _online, lastError: _lastError }; }
 
   // Look for a gist (under this token's account) that already holds our data file,
   // so a second device using the same token syncs to the existing gist instead of creating a new one
@@ -242,11 +302,18 @@ const Storage = (() => {
     await saveData(data);
   }
 
-  function today() { return new Date().toISOString().split('T')[0]; }
+  // Local-timezone date (YYYY-MM-DD). Using toISOString() here would give the UTC
+  // date, which can be a day off for users east/west of UTC (e.g. IST), making
+  // "today's" steps/food land on the wrong day.
+  function today() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
 
   return {
     getConfig, setConfig, isSetup,
     loadData, saveData,
+    testConnection, getStatus,
     addWeight, deleteWeight, getWeights,
     addFood, deleteFood, getFoods,
     getFoodLibrary, deleteFoodFromLibrary,
