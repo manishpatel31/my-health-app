@@ -1,6 +1,27 @@
 // ===== VITALGREEN v2 — SHARED UTILITIES =====
 let _dashSnapshot = null; // holds weights/foods/settings for on-demand AI insight
 
+// ---- Live sync ----
+// This app has no backend/websocket — data lives in a GitHub Gist that other devices
+// write to. We can't get instant push updates, but we can get close: re-fetch as soon
+// as the app/tab regains focus (covers switching back from another app, unlocking the
+// phone, etc.) plus a light poll while the page stays open, so edits from another
+// device show up without the user having to close and reopen the app.
+function initLiveSync(refreshFn, intervalMs = 10000) {
+  if (typeof refreshFn !== 'function') return;
+  let running = false;
+  const tick = async () => {
+    if (running) return; // avoid overlapping fetches if one is already in flight
+    running = true;
+    try { await refreshFn(); } catch (e) { console.warn('Live sync refresh failed', e); }
+    running = false;
+  };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(); });
+  window.addEventListener('focus', tick);
+  window.addEventListener('online', tick);
+  setInterval(() => { if (document.visibilityState === 'visible') tick(); }, intervalMs);
+}
+
 // ---- Setup ----
 async function saveSetup() {
   const token   = document.getElementById('ghToken')?.value?.trim();
@@ -332,7 +353,8 @@ function renderMiniWeightChart(weights) {
     ctx.fillText('Log your weight to see trends', canvas.width/2, 75); return;
   }
   const labels = weights.map(w => { const d=new Date(w.date); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}); });
-  new Chart(canvas, {
+  if (canvas._chart) canvas._chart.destroy();
+  canvas._chart = new Chart(canvas, {
     type:'line', data:{ labels, datasets:[{
       data: weights.map(w=>w.kg), borderColor:'#2d8a55', backgroundColor:'rgba(45,138,85,0.08)',
       borderWidth:2.5, pointBackgroundColor:'#2d8a55', pointRadius:4, tension:0.4, fill:true
