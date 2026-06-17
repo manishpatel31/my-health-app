@@ -334,9 +334,9 @@ function renderFoodPreview(foods) {
   if (!foods || foods.length === 0) {
     el.innerHTML = '<p class="empty-state">No food logged today. <a href="pages/calories.html">Add a meal →</a></p>'; return;
   }
-  el.innerHTML = foods.slice(0,5).map(f => `
-    <div class="food-entry">
-      <div class="food-entry-icon">🍽️</div>
+  el.innerHTML = foods.slice(0,5).map((f,i) => `
+    <div class="food-entry" style="animation:slideUp .35s ease both;animation-delay:${i*0.05}s">
+      <div class="food-entry-icon">${typeof FoodDB!=='undefined' ? FoodDB.emojiFor(f.name) : '🍽️'}</div>
       <div class="food-entry-info">
         <div class="food-entry-name">${escHtml(f.name)}</div>
         <div class="food-entry-portion">${escHtml(f.portion||'')}</div>
