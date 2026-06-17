@@ -1,0 +1,16 @@
+{
+  "name": "VitalGreen — Health Hub",
+  "short_name": "VitalGreen",
+  "description": "Personal health tracker: calories, weight, steps, water and AI insights.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#155033",
+  "theme_color": "#1c6b44",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
