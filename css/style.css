@@ -269,6 +269,22 @@ a:hover{color:var(--green-700)}
 .weeks-banner .weeks-num{font-family:var(--font-display);font-size:2.2rem;font-weight:300}
 .weeks-banner .weeks-label{font-size:0.8rem;opacity:0.9}
 
+.pace-warning{background:rgba(230,126,34,0.12);border:1px solid rgba(230,126,34,0.35);color:#9a5a12;border-radius:var(--radius-md);padding:0.85rem 1rem;margin-top:0.75rem;font-size:0.82rem;line-height:1.55}
+
+/* ===== WEIGHT-LOSS ROADMAP ===== */
+.milestone-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:0.75rem;padding:0.65rem 0.2rem;border-bottom:1px solid var(--glass-border)}
+.milestone-row:last-child{border-bottom:none}
+.milestone-label{font-size:0.85rem;font-weight:600;color:var(--ink)}
+.milestone-date{font-size:0.76rem;color:var(--muted)}
+.milestone-weight{font-family:var(--font-display);font-size:1.05rem;font-weight:600;color:var(--green-700)}
+
+/* ===== HOME: DAILY ACTION PLAN BULLETS ===== */
+.ai-bullets{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.45rem}
+.ai-bullets li{font-size:0.88rem;line-height:1.5}
+
+.energy-roadmap-link{display:inline-block;margin-top:0.85rem;font-size:0.82rem;font-weight:600;color:#d4f8e4;text-decoration:none}
+.energy-roadmap-link:hover{text-decoration:underline}
+
 /* ===== TIPS PAGE ===== */
 .tips-hero{background:linear-gradient(135deg,var(--green-700),var(--teal));border-radius:var(--radius-lg);padding:1.75rem 1.5rem;color:white;margin-bottom:1.25rem;text-align:center;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
 .tips-hero h2{font-family:var(--font-display);font-size:1.6rem;font-weight:300;margin-bottom:0.4rem}

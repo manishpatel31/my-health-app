@@ -81,17 +81,14 @@
       </div>
     </div>
     <div class="form-group">
-      <label>Weekly Weight Loss Target</label>
-      <select id="planWeeklyLoss">
-        <option value="0.25">0.25 kg/week (gentle)</option>
-        <option value="0.5" selected>0.5 kg/week (recommended)</option>
-        <option value="0.75">0.75 kg/week (moderate)</option>
-        <option value="1">1 kg/week (aggressive)</option>
-      </select>
+      <label>Reach target weight in how many days?</label>
+      <input type="number" id="planTargetDays" placeholder="e.g. 90" min="7" max="730"/>
+      <small>We'll work out the safe pace and a week-by-week plan for you.</small>
     </div>
     <button class="btn-secondary" onclick="calcDeficitPlan()" style="width:100%;margin-bottom:0.75rem">
       <i class="fas fa-calculator"></i> Calculate My Plan
     </button>
+    <div id="paceWarning" class="pace-warning" style="display:none"></div>
     <div id="deficitResult" style="display:none">
       <div class="deficit-grid">
         <div class="deficit-item"><div class="d-val" id="dBMR">—</div><div class="d-label">BMR (kcal)</div></div>
@@ -101,9 +98,19 @@
       </div>
       <div class="weeks-banner" id="weeksBanner" style="display:none">
         <div class="weeks-num" id="dWeeks">—</div>
-        <div class="weeks-label">weeks to reach your target weight</div>
+        <div class="weeks-label">days to reach your target weight</div>
       </div>
     </div>
+  </div>
+
+  <!-- Weight Loss Roadmap -->
+  <div class="card" id="roadmapCard" style="display:none">
+    <div class="card-title">🗺️ Your Weight-Loss Roadmap</div>
+    <div id="milestoneList"></div>
+    <button class="insight-refresh-btn" style="margin-top:0.85rem" onclick="generateRoadmapTips()" id="roadmapBtn">
+      <i class="fas fa-wand-magic-sparkles"></i> Generate AI Roadmap Tips
+    </button>
+    <div id="roadmapTips" class="insight-card-body" style="display:none;margin-top:0.75rem"></div>
   </div>
 
   <!-- AI Insights Cards -->
@@ -172,9 +179,16 @@ async function initInsightsPage() {
   if (settings.age) document.getElementById('planAge').value = settings.age;
   if (settings.gender) document.getElementById('planGender').value = settings.gender;
   if (settings.activityLevel) document.getElementById('planActivity').value = settings.activityLevel;
-  if (settings.weeklyLossKg) document.getElementById('planWeeklyLoss').value = settings.weeklyLossKg;
   if (weights[0]) document.getElementById('planCurrentW').value = weights[0].kg;
   if (settings.targetWeightKg) document.getElementById('planTargetW').value = settings.targetWeightKg;
+  if (settings.targetDateISO) {
+    const daysLeft = Math.max(1, Math.round((new Date(settings.targetDateISO+'T00:00:00') - new Date(Storage.today()+'T00:00:00')) / 86400000));
+    document.getElementById('planTargetDays').value = daysLeft;
+  }
+  // If a plan already exists, show the roadmap immediately
+  if (settings.targetWeightKg && settings.targetDateISO && weights[0]) {
+    renderMilestones(weights[0].kg, settings.targetWeightKg, settings.targetDateISO);
+  }
 
   // Weekly stats
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
@@ -257,8 +271,30 @@ function calcDeficitPlan() {
   const age = parseInt(document.getElementById('planAge').value) || 30;
   const gender = document.getElementById('planGender').value;
   const activity = document.getElementById('planActivity').value;
-  const weeklyLoss = parseFloat(document.getElementById('planWeeklyLoss').value);
+  const days = parseInt(document.getElementById('planTargetDays').value) || null;
   if (!cw || !h) { showToast('Enter current weight and height'); return; }
+
+  // Work out the pace required to hit the target weight in the given timeframe
+  let weeklyLoss = 0.5, targetDateISO = null;
+  const warnEl = document.getElementById('paceWarning');
+  warnEl.style.display = 'none';
+  if (tw && days) {
+    const totalDiff = Math.abs(cw - tw);
+    const impliedWeekly = totalDiff / (days/7);
+    const SAFE_MAX = 1.0; // kg/week — generally accepted safe upper bound
+    if (impliedWeekly > SAFE_MAX) {
+      const minDays = Math.ceil(totalDiff / SAFE_MAX * 7);
+      warnEl.style.display = 'block';
+      warnEl.innerHTML = `⚠️ That pace needs <strong>${impliedWeekly.toFixed(2)} kg/week</strong>, faster than the safe limit of ${SAFE_MAX} kg/week.
+        We've capped your plan at ${SAFE_MAX} kg/week — realistically you'll need at least <strong>${minDays} days</strong> (~${Math.round(minDays/7)} weeks) for this goal.`;
+      weeklyLoss = SAFE_MAX;
+    } else {
+      weeklyLoss = Math.max(0.1, impliedWeekly);
+    }
+    const d = new Date(); d.setDate(d.getDate() + days);
+    targetDateISO = d.toISOString().split('T')[0];
+  }
+
   const settings = { heightCm:h, age, gender, activityLevel:activity, weeklyLossKg:weeklyLoss, targetWeightKg:tw||null };
   const result = calcDeficit(settings, cw);
   document.getElementById('dBMR').textContent = result.bmr;
@@ -266,14 +302,92 @@ function calcDeficitPlan() {
   document.getElementById('dDeficit').textContent = result.dailyDeficit;
   document.getElementById('dTarget').textContent = result.targetCal;
   document.getElementById('deficitResult').style.display = 'block';
-  if (tw && result.weeksToGoal) {
-    document.getElementById('dWeeks').textContent = result.weeksToGoal;
+  if (tw && days) {
+    document.getElementById('dWeeks').textContent = days;
     document.getElementById('weeksBanner').style.display = 'block';
   } else { document.getElementById('weeksBanner').style.display = 'none'; }
+
   // Save to settings
   Storage.saveSettings({ heightCm:h, age, gender, activityLevel:activity, weeklyLossKg:weeklyLoss,
-    targetWeightKg:tw||null, calorieGoal: result.targetCal });
+    targetWeightKg:tw||null, targetDateISO, calorieGoal: result.targetCal });
   showToast(`✓ Plan saved! Eat ${result.targetCal} kcal/day`);
+
+  if (tw && targetDateISO) renderMilestones(cw, tw, targetDateISO);
+  else document.getElementById('roadmapCard').style.display = 'none';
+}
+
+// ---- Weight-loss roadmap: deterministic weekly/monthly/3-month/6-month checkpoints ----
+function buildMilestones(cw, tw, targetDateISO) {
+  const todayMs = new Date(Storage.today()+'T00:00:00').getTime();
+  const targetMs = new Date(targetDateISO+'T00:00:00').getTime();
+  const totalDays = Math.max(1, Math.round((targetMs - todayMs) / 86400000));
+  const checkpointDays = [7,14,30,60,90,180].filter(d => d < totalDays);
+  checkpointDays.push(totalDays);
+  const labels = { 7:'Week 1', 14:'Week 2', 30:'Month 1', 60:'Month 2', 90:'Month 3', 180:'Month 6' };
+  return checkpointDays.map(d => {
+    const weight = cw - (cw - tw) * (d / totalDays);
+    const date = new Date(todayMs + d*86400000);
+    return {
+      label: d === totalDays ? 'Goal day' : (labels[d] || `Day ${d}`),
+      days: d,
+      date: date.toLocaleDateString('en-IN',{day:'numeric',month:'short'}),
+      weight: Math.round(weight*10)/10,
+    };
+  });
+}
+
+function renderMilestones(cw, tw, targetDateISO) {
+  const card = document.getElementById('roadmapCard'); card.style.display = 'block';
+  const milestones = buildMilestones(cw, tw, targetDateISO);
+  window._lastMilestones = milestones; // used by generateRoadmapTips
+  window._lastPlan = { cw, tw, targetDateISO };
+  document.getElementById('milestoneList').innerHTML = milestones.map(m => `
+    <div class="milestone-row">
+      <div class="milestone-label">${m.label}</div>
+      <div class="milestone-date">${m.date}</div>
+      <div class="milestone-weight">${m.weight} kg</div>
+    </div>`).join('');
+  // Show cached AI tips for this exact plan, if any
+  const key = roadmapCacheKey();
+  let cached = null; try { cached = JSON.parse(localStorage.getItem(key)||'null'); } catch {}
+  const box = document.getElementById('roadmapTips');
+  if (cached && cached.text) {
+    box.style.display = 'block';
+    box.innerHTML = formatMessage(cached.text) + `<div style="margin-top:0.6rem;font-size:0.72rem;color:var(--muted)">🕒 tap Generate to refresh</div>`;
+  } else { box.style.display = 'none'; box.innerHTML = ''; }
+}
+
+function roadmapCacheKey() {
+  const p = window._lastPlan || {};
+  return `vg_roadmap_${p.tw}_${p.targetDateISO}`;
+}
+
+async function generateRoadmapTips() {
+  const milestones = window._lastMilestones; const plan = window._lastPlan;
+  if (!milestones || !plan) { showToast('Calculate your plan first'); return; }
+  const btn = document.getElementById('roadmapBtn');
+  const box = document.getElementById('roadmapTips');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner-sm"></span> Generating...';
+  box.style.display = 'block';
+  box.innerHTML = '<span style="opacity:0.6">🤖 AI is building your phase-by-phase roadmap...</span>';
+  try {
+    const milestoneText = milestones.map(m => `${m.label} (${m.date}): target ${m.weight} kg`).join('\n');
+    const prompt = `Here is the user's exact weight-loss roadmap, already calculated (do not change these numbers):
+${milestoneText}
+
+Current weight: ${plan.cw}kg → Target: ${plan.tw}kg by ${plan.targetDateISO}.
+${healthCtx}
+
+For each phase in the roadmap above, give a short, specific focus area (diet adjustment, exercise focus, or habit to build). Keep each phase to 1-2 sentences. Use the milestone labels exactly as given. End with one motivating sentence.`;
+    const reply = await callGroq([{role:'user',content:prompt}],
+      'You are an expert health coach creating a phased weight-loss roadmap. Reuse the exact milestone numbers given — never recalculate them.', 700);
+    box.innerHTML = formatMessage(reply);
+    localStorage.setItem(roadmapCacheKey(), JSON.stringify({ text: reply, ts: Date.now() }));
+  } catch(e) {
+    box.innerHTML = `<span style="color:var(--danger)">⚠️ ${escHtml(e.message)}</span>`;
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Generate AI Roadmap Tips';
+  }
 }
 
 function formatMessage(text) {

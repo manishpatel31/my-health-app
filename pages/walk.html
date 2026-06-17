@@ -160,12 +160,6 @@ async function refreshWalkData() {
   renderWalkHistory(walks.slice(0,20));
 }
 
-function stepsToCalories(steps, weightKg) {
-  // ~0.04 kcal per step per 70kg person, scaled
-  const w = weightKg || 70;
-  return Math.round(steps * 0.04 * (w/70));
-}
-
 async function previewCalories() {
   const steps = parseInt(document.getElementById('walkSteps').value) || 0;
   const preview = document.getElementById('walkCalPreview');

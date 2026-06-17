@@ -41,6 +41,7 @@ const Storage = (() => {
         calorieGoal: 2000,
         heightCm: null,
         targetWeightKg: null,
+        targetDateISO: null,   // date by which the user wants to hit targetWeightKg
         weeklyLossKg: 0.5,
         dailyStepsGoal: 8000,
         waterGoalGlasses: 8,
@@ -62,7 +63,11 @@ const Storage = (() => {
   async function loadData() {
     const { token, gistId } = getConfig();
     if (!token) return defaultData();
-    if (!gistId) return await createGist();
+    if (!gistId) {
+      const found = await findExistingGist();
+      if (found) { localStorage.setItem('vg_gist_id', found); return await loadData(); }
+      return await createGist();
+    }
     try {
       const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders() });
       if (!res.ok) throw new Error('not found');
@@ -77,6 +82,7 @@ const Storage = (() => {
       if (!data.settings.dailyStepsGoal) data.settings.dailyStepsGoal = 8000;
       if (!data.settings.waterGoalGlasses) data.settings.waterGoalGlasses = 8;
       if (!data.settings.targetWeightKg) data.settings.targetWeightKg = null;
+      if (data.settings.targetDateISO === undefined) data.settings.targetDateISO = null;
       if (!data.settings.weeklyLossKg) data.settings.weeklyLossKg = 0.5;
       setCache(data);
       return data;
@@ -98,6 +104,18 @@ const Storage = (() => {
         method: 'PATCH', headers: await ghHeaders(), body: JSON.stringify(body)
       });
     } catch(e) { console.warn('Gist save failed', e); }
+  }
+
+  // Look for a gist (under this token's account) that already holds our data file,
+  // so a second device using the same token syncs to the existing gist instead of creating a new one
+  async function findExistingGist() {
+    try {
+      const res = await fetch('https://api.github.com/gists?per_page=100', { headers: await ghHeaders() });
+      if (!res.ok) return null;
+      const gists = await res.json();
+      const match = gists.find(g => g.files && g.files[GIST_FILENAME]);
+      return match ? match.id : null;
+    } catch { return null; }
   }
 
   async function createGist(initialData) {
@@ -214,7 +232,7 @@ const Storage = (() => {
   // ---- Settings ----
   async function getSettings() {
     const d = await loadData();
-    return { calorieGoal:2000, heightCm:null, targetWeightKg:null, weeklyLossKg:0.5,
+    return { calorieGoal:2000, heightCm:null, targetWeightKg:null, targetDateISO:null, weeklyLossKg:0.5,
       dailyStepsGoal:8000, waterGoalGlasses:8, activityLevel:'moderate', age:null, gender:'male',
       ...d.settings };
   }

@@ -6,17 +6,20 @@ function saveSetup() {
   const token   = document.getElementById('ghToken')?.value?.trim();
   const name    = document.getElementById('userName')?.value?.trim();
   const groqKey = document.getElementById('groqKey')?.value?.trim();
+  const gistId  = document.getElementById('gistIdField')?.value?.trim();
   if (!token || !name || !groqKey) { showToast('Please fill in all fields'); return; }
-  Storage.setConfig({ token, userName: name, groqKey });
+  Storage.setConfig({ token, userName: name, groqKey, gistId: gistId || undefined });
   document.getElementById('setupModal')?.classList.add('hidden');
   if (typeof initDashboard === 'function') initDashboard();
 }
 
-function showSettings() {
+async function showSettings() {
   const cfg = Storage.getConfig();
   const el = document.getElementById('ghToken'); if (el) el.value = cfg.token || '';
   const el2 = document.getElementById('userName'); if (el2) el2.value = cfg.userName || '';
   const el3 = document.getElementById('groqKey'); if (el3) el3.value = cfg.groqKey || '';
+  const el4 = document.getElementById('gistIdField');
+  if (el4) el4.value = cfg.gistId || '';
   document.getElementById('setupModal')?.classList.remove('hidden');
 }
 
@@ -124,7 +127,7 @@ async function initDashboard() {
   renderStreakCard(allFoods, allWalks, allWater, weights);
   renderWaterWidget(allWater, settings);
   renderCalorieTrend(allFoods, settings);
-  _dashSnapshot = { weights, foods, settings };
+  _dashSnapshot = { weights, foods, settings, walksToday: walks };
   renderDailyInsightBanner();
 }
 
@@ -140,12 +143,19 @@ function renderEnergyCard(weights, settings) {
   }
   const r = calcDeficit(settings, cw);
   const targetW = settings.targetWeightKg;
-  const goalLine = targetW
-    ? (Math.abs(cw - targetW) < 0.1
-        ? `🎉 You're at your target weight of <strong>${targetW} kg</strong>!`
-        : `To reach <strong>${targetW} kg</strong>, eat <strong>${r.targetCal} kcal/day</strong>` +
-          (r.weeksToGoal ? ` — about <strong>${r.weeksToGoal} weeks</strong> away.` : '.'))
-    : `Set a target weight in the planner to get a daily calorie target.`;
+  const daysLeft = daysUntil(settings.targetDateISO);
+  let goalLine;
+  if (!targetW) {
+    goalLine = `Set a time-bound target weight in the planner to get a daily calorie target.`;
+  } else if (Math.abs(cw - targetW) < 0.1) {
+    goalLine = `🎉 You're at your target weight of <strong>${targetW} kg</strong>!`;
+  } else {
+    const timeLine = daysLeft != null
+      ? (daysLeft > 0 ? ` — <strong>${daysLeft} day${daysLeft===1?'':'s'}</strong> left until your goal date.`
+                      : ` — your target date has passed, time to set a new one.`)
+      : (r.weeksToGoal ? ` — about <strong>${r.weeksToGoal} weeks</strong> away.` : '.');
+    goalLine = `To reach <strong>${targetW} kg</strong>, eat <strong>${r.targetCal} kcal/day</strong>${timeLine}`;
+  }
   el.innerHTML = `
     <div class="card-title">⚡ Your Energy Needs</div>
     <div class="energy-grid">
@@ -154,7 +164,14 @@ function renderEnergyCard(weights, settings) {
       <div class="energy-item"><div class="e-val">−${r.dailyDeficit}</div><div class="e-label">Deficit<br><span>to lose ${settings.weeklyLossKg||0.5}kg/wk</span></div></div>
       <div class="energy-item e-target"><div class="e-val">${r.targetCal}</div><div class="e-label">Eat this<br><span>kcal/day</span></div></div>
     </div>
-    <p class="energy-goal-line">${goalLine}</p>`;
+    <p class="energy-goal-line">${goalLine}</p>
+    <a href="pages/insights.html" class="energy-roadmap-link">🗺️ View your weight-loss roadmap →</a>`;
+}
+
+function daysUntil(dateISO) {
+  if (!dateISO) return null;
+  const ms = new Date(dateISO+'T00:00:00') - new Date(Storage.today()+'T00:00:00');
+  return Math.round(ms / 86400000);
 }
 
 // ===== STREAK + GAMIFICATION =====
@@ -319,7 +336,7 @@ function renderMiniWeightChart(weights) {
   });
 }
 
-// Renders the daily insight WITHOUT calling the AI. Shows the cached insight for
+// Renders the daily action plan WITHOUT calling the AI. Shows the cached plan for
 // today (if any), otherwise a Generate button. AI is only called on button press.
 function renderDailyInsightBanner() {
   const el = document.getElementById('aiInsightBanner'); if (!el) return;
@@ -329,35 +346,68 @@ function renderDailyInsightBanner() {
   try { cached = JSON.parse(localStorage.getItem('vg_daily_insight') || 'null'); } catch {}
   const genBtn = (label) => `<button class="insight-gen-btn" onclick="generateDailyInsight()">${label}</button>`;
   if (cached && cached.date === Storage.today() && cached.text) {
-    el.innerHTML = `<div class="insight-content"><span class="insight-icon">💡</span><p>${escHtml(cached.text)}</p></div>${genBtn('<i class="fas fa-rotate-right"></i> Regenerate')}`;
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">📋</span><div>${formatDailyTips(cached.text)}</div></div>${genBtn('<i class="fas fa-rotate-right"></i> Regenerate')}`;
   } else {
-    el.innerHTML = `<div class="insight-content"><span class="insight-icon">✨</span><p>Get a personalized AI insight based on today's data.</p></div>${genBtn('<i class="fas fa-wand-magic-sparkles"></i> Generate insight')}`;
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">✨</span><p>Get today's action plan — exact calories left, steps to walk, and what to do next.</p></div>${genBtn('<i class="fas fa-wand-magic-sparkles"></i> Generate today’s plan')}`;
   }
 }
 
 async function generateDailyInsight() {
   const el = document.getElementById('aiInsightBanner'); if (!el) return;
-  const { weights=[], foods=[], settings={} } = _dashSnapshot || {};
-  el.innerHTML = `<div class="insight-loading"><span class="spinner-sm"></span> AI is reading your data...</div>`;
+  const { weights=[], foods=[], settings={}, walksToday=[] } = _dashSnapshot || {};
+  el.innerHTML = `<div class="insight-loading"><span class="spinner-sm"></span> AI is building today's plan...</div>`;
   try {
     const todayKcal = foods.reduce((s,f)=>s+(f.calories||0),0);
-    const latestW = weights[0]?.kg;
+    const latestW = weights[0]?.kg || 70;
     const targetW = settings.targetWeightKg;
-    const bmi = latestW && settings.heightCm ? (latestW/((settings.heightCm/100)**2)).toFixed(1) : null;
-    const prompt = `User health snapshot:
-- Weight: ${latestW ? latestW+'kg' : 'not set'}, Target: ${targetW ? targetW+'kg' : 'not set'}
-- BMI: ${bmi||'unknown'}, Calorie goal: ${settings.calorieGoal}, Consumed today: ${Math.round(todayKcal)} kcal
-- Steps goal: ${settings.dailyStepsGoal}
-- Today's foods: ${foods.map(f=>f.name).join(', ')||'none yet'}
+    const bmi = weights[0]?.kg && settings.heightCm ? (weights[0].kg/((settings.heightCm/100)**2)).toFixed(1) : null;
+    const goal = settings.calorieGoal || 2000;
+    const remaining = Math.round(goal - todayKcal);
+    const stepsSoFar = walksToday.reduce((s,w)=>s+(w.steps||0),0);
+    const stepsGoal = settings.dailyStepsGoal || 8000;
+    const stepsRemaining = Math.max(0, stepsGoal - stepsSoFar);
+    const daysLeft = daysUntil(settings.targetDateISO);
 
-Give ONE short, specific, motivating insight or tip for today. Max 2 sentences. Be direct and personal.`;
+    // Precompute the grounding numbers ourselves — the AI is told to use them, not invent its own
+    let budgetLine;
+    if (remaining >= 0) {
+      budgetLine = `Has ${remaining} kcal left in today's budget (goal ${goal}, eaten ${Math.round(todayKcal)}).`;
+    } else {
+      const over = Math.abs(remaining);
+      const extraSteps = caloriesToSteps(over, latestW);
+      budgetLine = `Is ${over} kcal OVER today's budget (goal ${goal}, eaten ${Math.round(todayKcal)}). Walking an EXTRA ${extraSteps.toLocaleString()} steps today would burn that off (use this exact number).`;
+    }
+    const stepsLine = stepsRemaining > 0
+      ? `Has walked ${stepsSoFar.toLocaleString()} of ${stepsGoal.toLocaleString()} steps today — needs ${stepsRemaining.toLocaleString()} more steps to hit the goal (use this exact number).`
+      : `Already hit today's step goal of ${stepsGoal.toLocaleString()} (${stepsSoFar.toLocaleString()} steps) 🎉.`;
+    const targetLine = targetW
+      ? `Target weight: ${targetW}kg${daysLeft!=null ? `, ${daysLeft} day(s) left to reach it` : ''}.`
+      : `No target weight set yet.`;
+
+    const prompt = `User snapshot for today:
+- Current weight: ${weights[0]?.kg||'?'}kg, BMI: ${bmi||'unknown'}
+- ${targetLine}
+- ${budgetLine}
+- ${stepsLine}
+- Today's foods so far: ${foods.map(f=>f.name).join(', ')||'none yet'}
+
+Write exactly 3 short action items for the rest of today as a bullet list (one line each, start each line with "- "). You MUST use the exact numbers given above (steps, kcal) — do not invent new numbers or estimates. Be direct, specific and motivating. No intro, no headings, just the 3 bullets.`;
     const reply = await callGroq([{role:'user',content:prompt}],
-      'You are a sharp health coach. Give daily insights in 1-2 sentences max. Be specific, not generic.');
+      'You are a sharp, numbers-driven health coach. Always reuse the exact figures the user gives you instead of making up your own.');
     localStorage.setItem('vg_daily_insight', JSON.stringify({ date: Storage.today(), text: reply }));
     renderDailyInsightBanner();
   } catch(e) {
-    el.innerHTML = `<div class="insight-content"><span class="insight-icon">⚠️</span><p>Couldn't generate insight — check your Groq API key in settings.</p></div><button class="insight-gen-btn" onclick="generateDailyInsight()"><i class="fas fa-rotate-right"></i> Try again</button>`;
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">⚠️</span><p>Couldn't generate your plan — check your Groq API key in settings.</p></div><button class="insight-gen-btn" onclick="generateDailyInsight()"><i class="fas fa-rotate-right"></i> Try again</button>`;
   }
+}
+
+// Renders AI bullet-list replies (lines starting with "- ") as a clean <ul>; escapes HTML first
+function formatDailyTips(text) {
+  const esc = escHtml(text).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  const lines = esc.split('\n').map(l => l.trim()).filter(Boolean);
+  const bullets = lines.filter(l => /^[-•]\s+/.test(l)).map(l => l.replace(/^[-•]\s+/,''));
+  if (bullets.length) return `<ul class="ai-bullets">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>`;
+  return `<p>${esc.replace(/\n/g,'<br>')}</p>`;
 }
 
 // ---- Utilities ----
@@ -401,6 +451,17 @@ function calcBMR(weight, height, age, gender) {
 
 function activityMultiplier(level) {
   return { sedentary:1.2, light:1.375, moderate:1.55, active:1.725, veryactive:1.9 }[level] || 1.55;
+}
+
+// ---- Steps <-> calories (shared by Walk page + daily action plan) ----
+function stepsToCalories(steps, weightKg) {
+  // ~0.04 kcal per step per 70kg person, scaled
+  const w = weightKg || 70;
+  return Math.round(steps * 0.04 * (w/70));
+}
+function caloriesToSteps(cal, weightKg) {
+  const w = weightKg || 70;
+  return Math.round(cal / (0.04 * (w/70)));
 }
 
 // ---- Groq API ----
