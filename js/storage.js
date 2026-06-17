@@ -63,7 +63,11 @@ const Storage = (() => {
   async function loadData() {
     const { token, gistId } = getConfig();
     if (!token) return defaultData();
-    if (!gistId) return await createGist();
+    if (!gistId) {
+      const found = await findExistingGist();
+      if (found) { localStorage.setItem('vg_gist_id', found); return await loadData(); }
+      return await createGist();
+    }
     try {
       const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders() });
       if (!res.ok) throw new Error('not found');
@@ -100,6 +104,18 @@ const Storage = (() => {
         method: 'PATCH', headers: await ghHeaders(), body: JSON.stringify(body)
       });
     } catch(e) { console.warn('Gist save failed', e); }
+  }
+
+  // Look for a gist (under this token's account) that already holds our data file,
+  // so a second device using the same token syncs to the existing gist instead of creating a new one
+  async function findExistingGist() {
+    try {
+      const res = await fetch('https://api.github.com/gists?per_page=100', { headers: await ghHeaders() });
+      if (!res.ok) return null;
+      const gists = await res.json();
+      const match = gists.find(g => g.files && g.files[GIST_FILENAME]);
+      return match ? match.id : null;
+    } catch { return null; }
   }
 
   async function createGist(initialData) {

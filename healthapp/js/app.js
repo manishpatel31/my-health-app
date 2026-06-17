@@ -6,17 +6,20 @@ function saveSetup() {
   const token   = document.getElementById('ghToken')?.value?.trim();
   const name    = document.getElementById('userName')?.value?.trim();
   const groqKey = document.getElementById('groqKey')?.value?.trim();
+  const gistId  = document.getElementById('gistIdField')?.value?.trim();
   if (!token || !name || !groqKey) { showToast('Please fill in all fields'); return; }
-  Storage.setConfig({ token, userName: name, groqKey });
+  Storage.setConfig({ token, userName: name, groqKey, gistId: gistId || undefined });
   document.getElementById('setupModal')?.classList.add('hidden');
   if (typeof initDashboard === 'function') initDashboard();
 }
 
-function showSettings() {
+async function showSettings() {
   const cfg = Storage.getConfig();
   const el = document.getElementById('ghToken'); if (el) el.value = cfg.token || '';
   const el2 = document.getElementById('userName'); if (el2) el2.value = cfg.userName || '';
   const el3 = document.getElementById('groqKey'); if (el3) el3.value = cfg.groqKey || '';
+  const el4 = document.getElementById('gistIdField');
+  if (el4) el4.value = cfg.gistId || '';
   document.getElementById('setupModal')?.classList.remove('hidden');
 }
 
