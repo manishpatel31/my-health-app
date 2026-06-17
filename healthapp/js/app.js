@@ -2,13 +2,20 @@
 let _dashSnapshot = null; // holds weights/foods/settings for on-demand AI insight
 
 // ---- Setup ----
-function saveSetup() {
+async function saveSetup() {
   const token   = document.getElementById('ghToken')?.value?.trim();
   const name    = document.getElementById('userName')?.value?.trim();
   const groqKey = document.getElementById('groqKey')?.value?.trim();
   const gistId  = document.getElementById('gistIdField')?.value?.trim();
   if (!token || !name || !groqKey) { showToast('Please fill in all fields'); return; }
   Storage.setConfig({ token, userName: name, groqKey, gistId: gistId || undefined });
+
+  // Verify the token/gist actually work before closing setup, so sync problems
+  // surface here instead of silently failing on another device later.
+  showToast('🔄 Checking GitHub connection...');
+  const result = await Storage.testConnection();
+  if (!result.ok) { showToast('❌ ' + result.message); return; }
+  showToast('✅ ' + result.message);
   document.getElementById('setupModal')?.classList.add('hidden');
   if (typeof initDashboard === 'function') initDashboard();
 }
