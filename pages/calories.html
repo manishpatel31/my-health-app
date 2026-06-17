@@ -174,7 +174,9 @@ let libraryData = [];
 
 function switchTab(name, btn) {
   ['browse','ai','library','log'].forEach(t => {
-    document.getElementById('tab-'+t).style.display = t===name ? 'block' : 'none';
+    const el = document.getElementById('tab-'+t);
+    if (t === name) { el.style.display = 'block'; el.style.animation = 'fadeIn .35s ease'; }
+    else { el.style.display = 'none'; el.style.animation = ''; }
   });
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -217,8 +219,9 @@ function renderBrowseList() {
   const el = document.getElementById('browseList');
   const items = FoodDB.list().filter(d => (browseCategory==='all'||d.cat===browseCategory) && (!q || d.label.toLowerCase().includes(q)));
   if (!items.length) { el.innerHTML = '<p class="empty-state">No dishes match — try the AI Log tab.</p>'; return; }
-  el.innerHTML = items.map(d => `
-    <div class="dish-row" style="display:flex;align-items:center;gap:0.5rem;padding:0.55rem 0;border-bottom:1px solid var(--border)">
+  el.innerHTML = items.map((d,i) => `
+    <div class="dish-row" style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0;border-bottom:1px solid var(--border);animation:slideUp .35s ease both;animation-delay:${Math.min(i*0.02,0.4)}s">
+      <div class="dish-emoji" style="font-size:1.4rem;line-height:1;flex-shrink:0;width:2.2rem;height:2.2rem;display:flex;align-items:center;justify-content:center;background:var(--green-50);border-radius:50%;transition:transform .2s">${d.entry.emoji||'🍽️'}</div>
       <div style="flex:1;min-width:0">
         <div style="font-weight:500">${escHtml(d.label)}</div>
         <div style="font-size:0.74rem;color:var(--muted)">${escHtml(d.entry.portion)} · ${d.entry.calories} kcal</div>
@@ -245,7 +248,7 @@ function addDishFromBrowse(btn) {
   });
   renderMealBuilder();
   document.getElementById('mealBuilder').scrollIntoView({behavior:'smooth',block:'nearest'});
-  showToast(`✓ Added ${label}`);
+  showToast(`${match.emoji||'✓'} Added ${label}`);
 }
 
 // Populate the <datalist> so each row input suggests your saved foods
@@ -309,10 +312,9 @@ function renderFoodLog(foods, goal) {
   document.getElementById('remainingCal').textContent = over ? `${Math.abs(rem)} kcal over goal` : `${rem} remaining`;
   const el = document.getElementById('foodLogList');
   if (!foods.length) { el.innerHTML = '<p class="empty-state">No food logged for this day.</p>'; return; }
-  const mealEmoji = {breakfast:'🌅',lunch:'☀️',dinner:'🌙',snack:'🍪',other:'🍽️'};
-  el.innerHTML = foods.map(f => `
-    <div class="food-entry">
-      <div class="food-entry-icon">${mealEmoji[f.meal]||'🍽️'}</div>
+  el.innerHTML = foods.map((f,i) => `
+    <div class="food-entry" style="animation:slideUp .35s ease both;animation-delay:${Math.min(i*0.04,0.3)}s">
+      <div class="food-entry-icon">${FoodDB.emojiFor(f.name)}</div>
       <div class="food-entry-info">
         <div class="food-entry-name">${escHtml(f.name)}</div>
         <div class="food-entry-portion">${escHtml(f.portion||'')}${f.meal ? ' · '+f.meal : ''}</div>
@@ -334,8 +336,8 @@ function renderMealBuilder() {
   document.getElementById('mealTotals').textContent =
     `${Math.round(t.cal)} kcal · P ${Math.round(t.p)}g · C ${Math.round(t.c)}g · F ${Math.round(t.fat)}g`;
   list.innerHTML = mealItems.map((f,i) => `
-    <div class="food-entry">
-      <div class="food-entry-icon">🍽️</div>
+    <div class="food-entry" style="animation:slideUp .3s cubic-bezier(0.34,1.56,0.64,1) both">
+      <div class="food-entry-icon">${FoodDB.emojiFor(f.name)}</div>
       <div class="food-entry-info">
         <div class="food-entry-name">${escHtml(f.name)}${f.portion ? ' · '+escHtml(f.portion) : ''}</div>
         <div class="food-entry-portion">P ${Math.round(f.protein||0)}g · C ${Math.round(f.carbs||0)}g · F ${Math.round(f.fat||0)}g</div>
@@ -468,9 +470,9 @@ function filterLibrary() {
 function renderLibrary(items) {
   const el = document.getElementById('libraryList');
   if (!items.length) { el.innerHTML = '<p class="empty-state">No foods saved yet. Log foods with AI to build your library!</p>'; return; }
-  el.innerHTML = items.slice(0,50).map(f => `
-    <div class="library-item" onclick="quickAddFromLibrary(${f.id})">
-      <div style="font-size:1.2rem">🍽️</div>
+  el.innerHTML = items.slice(0,50).map((f,i) => `
+    <div class="library-item" onclick="quickAddFromLibrary(${f.id})" style="animation:slideUp .3s ease both;animation-delay:${Math.min(i*0.02,0.3)}s">
+      <div style="font-size:1.2rem">${FoodDB.emojiFor(f.name)}</div>
       <div class="library-item-info">
         <div class="library-item-name">${escHtml(f.name)}</div>
         <div class="library-item-sub">${escHtml(f.portion||'std. serving')} · used ${f.usageCount||1}×</div>
