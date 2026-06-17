@@ -1,4 +1,5 @@
 // ===== VITALGREEN v2 — SHARED UTILITIES =====
+let _dashSnapshot = null; // holds weights/foods/settings for on-demand AI insight
 
 // ---- Setup ----
 function saveSetup() {
@@ -116,7 +117,8 @@ async function initDashboard() {
 
   renderFoodPreview(foods);
   renderMiniWeightChart(weights.slice(0,14).reverse());
-  renderDailyInsightBanner(weights, foods, settings);
+  _dashSnapshot = { weights, foods, settings };
+  renderDailyInsightBanner();
 }
 
 function renderFoodPreview(foods) {
@@ -157,10 +159,25 @@ function renderMiniWeightChart(weights) {
   });
 }
 
-async function renderDailyInsightBanner(weights, foods, settings) {
+// Renders the daily insight WITHOUT calling the AI. Shows the cached insight for
+// today (if any), otherwise a Generate button. AI is only called on button press.
+function renderDailyInsightBanner() {
   const el = document.getElementById('aiInsightBanner'); if (!el) return;
   if (!Storage.getConfig().groqKey) { el.style.display='none'; return; }
   el.style.display = 'block';
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem('vg_daily_insight') || 'null'); } catch {}
+  const genBtn = (label) => `<button class="insight-gen-btn" onclick="generateDailyInsight()">${label}</button>`;
+  if (cached && cached.date === Storage.today() && cached.text) {
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">💡</span><p>${escHtml(cached.text)}</p></div>${genBtn('<i class="fas fa-rotate-right"></i> Regenerate')}`;
+  } else {
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">✨</span><p>Get a personalized AI insight based on today's data.</p></div>${genBtn('<i class="fas fa-wand-magic-sparkles"></i> Generate insight')}`;
+  }
+}
+
+async function generateDailyInsight() {
+  const el = document.getElementById('aiInsightBanner'); if (!el) return;
+  const { weights=[], foods=[], settings={} } = _dashSnapshot || {};
   el.innerHTML = `<div class="insight-loading"><span class="spinner-sm"></span> AI is reading your data...</div>`;
   try {
     const todayKcal = foods.reduce((s,f)=>s+(f.calories||0),0);
@@ -176,8 +193,11 @@ async function renderDailyInsightBanner(weights, foods, settings) {
 Give ONE short, specific, motivating insight or tip for today. Max 2 sentences. Be direct and personal.`;
     const reply = await callGroq([{role:'user',content:prompt}],
       'You are a sharp health coach. Give daily insights in 1-2 sentences max. Be specific, not generic.');
-    el.innerHTML = `<div class="insight-content"><span class="insight-icon">💡</span><p>${escHtml(reply)}</p></div>`;
-  } catch(e) { el.innerHTML = `<div class="insight-content"><span class="insight-icon">💡</span><p>Log your meals and weight daily to unlock personalized AI insights!</p></div>`; }
+    localStorage.setItem('vg_daily_insight', JSON.stringify({ date: Storage.today(), text: reply }));
+    renderDailyInsightBanner();
+  } catch(e) {
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">⚠️</span><p>Couldn't generate insight — check your Groq API key in settings.</p></div><button class="insight-gen-btn" onclick="generateDailyInsight()"><i class="fas fa-rotate-right"></i> Try again</button>`;
+  }
 }
 
 // ---- Utilities ----

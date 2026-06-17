@@ -49,16 +49,16 @@
   <!-- TAB: AI Log -->
   <div id="tab-ai">
     <div class="food-input-card">
-      <h3><i class="fas fa-wand-magic-sparkles" style="margin-right:0.5rem;opacity:0.7"></i>Just describe your food — AI does the rest</h3>
+      <h3><i class="fas fa-wand-magic-sparkles" style="margin-right:0.5rem;opacity:0.7"></i>Add each item one by one — build your full meal, then save</h3>
       <div class="food-input-row">
         <div class="form-group">
           <label>Food Item</label>
-          <input type="text" id="foodName" placeholder="e.g. dal makhani, oats, egg white omelette" autocomplete="off"/>
+          <input type="text" id="foodName" placeholder="e.g. roti, dal, sabji, rice" autocomplete="off"/>
           <div id="autocompleteList" style="display:none;background:rgba(255,255,255,0.15);border-radius:8px;margin-top:0.35rem;overflow:hidden"></div>
         </div>
         <div class="form-group">
-          <label>Portion</label>
-          <input type="text" id="foodPortion" placeholder="e.g. 1 bowl, 200g, 2 pieces"/>
+          <label>Quantity</label>
+          <input type="text" id="foodPortion" placeholder="e.g. 2 pieces, 1 bowl, 200g"/>
         </div>
       </div>
       <div class="form-group" style="margin-top:0.5rem;margin-bottom:0">
@@ -71,14 +71,23 @@
         </select>
       </div>
       <div id="aiResultBox" class="ai-result-box"></div>
-      <div style="display:flex;gap:0.65rem;margin-top:0.75rem;flex-wrap:wrap">
-        <button class="btn-primary" onclick="analyzeFood()" id="analyzeBtn" style="flex:2;min-width:130px">
-          <i class="fas fa-wand-magic-sparkles"></i> Calculate Calories
-        </button>
-        <button class="btn-secondary" onclick="addAnalyzedFood()" id="addManualBtn" style="flex:1;min-width:90px;display:none;background:rgba(255,255,255,0.15);color:white;border-color:rgba(255,255,255,0.3)">
-          <i class="fas fa-plus"></i> Add
+      <div style="margin-top:0.75rem">
+        <button class="btn-primary" onclick="analyzeAndAdd()" id="analyzeBtn">
+          <i class="fas fa-plus"></i> Add Item
         </button>
       </div>
+    </div>
+
+    <!-- Meal builder: items pending before saving -->
+    <div class="card" id="mealBuilder" style="display:none">
+      <div class="card-header">
+        <div class="card-title" style="margin-bottom:0">🍱 This Meal</div>
+        <span id="mealTotals" style="font-size:0.78rem;color:var(--muted)"></span>
+      </div>
+      <div id="mealItemsList"></div>
+      <button class="btn-primary" onclick="saveMeal()" id="saveMealBtn" style="margin-top:0.85rem">
+        <i class="fas fa-floppy-disk"></i> Save Meal to Log
+      </button>
     </div>
   </div>
 
@@ -130,7 +139,7 @@
 <script src="../js/storage.js"></script>
 <script src="../js/app.js"></script>
 <script>
-let pendingFood = null;
+let mealItems = [];           // items queued in the meal builder before saving
 let currentDate = Storage.today();
 let libraryData = [];
 
@@ -179,19 +188,18 @@ function setupAutocomplete() {
 
 function hideAutocomplete() { document.getElementById('autocompleteList').style.display = 'none'; }
 
+// Pick from autocomplete / library — adds straight to the meal (no AI call needed)
 async function selectLibraryFood(id) {
   const lib = await Storage.getFoodLibrary();
   const item = lib.find(f => f.id === id); if (!item) return;
-  document.getElementById('foodName').value = item.name;
-  document.getElementById('foodPortion').value = item.portion || '';
   hideAutocomplete();
-  pendingFood = { name: item.name, portion: item.portion, calories: item.calories,
-    protein: item.protein, carbs: item.carbs, fat: item.fat,
-    meal: document.getElementById('mealType').value, date: currentDate };
-  const box = document.getElementById('aiResultBox');
-  box.className = 'ai-result-box show';
-  box.innerHTML = buildNutritionHTML(item.name, item.portion, item.calories, item.protein_g||item.protein, item.carbs_g||item.carbs, item.fat_g||item.fat, 'Loaded from your food library');
-  document.getElementById('addManualBtn').style.display = 'flex';
+  mealItems.push({ name: item.name, portion: item.portion || '', calories: item.calories,
+    protein: item.protein_g||item.protein||0, carbs: item.carbs_g||item.carbs||0, fat: item.fat_g||item.fat||0,
+    meal: document.getElementById('mealType').value, date: currentDate });
+  document.getElementById('foodName').value = '';
+  document.getElementById('foodPortion').value = '';
+  renderMealBuilder();
+  showToast(`✓ "${item.name}" added to meal`);
 }
 
 async function loadDayLog() {
@@ -229,19 +237,32 @@ function renderFoodLog(foods, goal) {
       <strong style="color:var(--ink)">Total: ${Math.round(total)} kcal</strong></div>`;
 }
 
-function buildNutritionHTML(name, portion, cal, protein, carbs, fat, note) {
-  return `<div style="margin-bottom:0.5rem;font-weight:600;font-size:0.95rem">${escHtml(name)}${portion ? ' · '+escHtml(portion) : ''}</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.4rem;margin-bottom:0.5rem">
-      ${[['kcal',Math.round(cal)],['protein',Math.round(protein||0)+'g'],['carbs',Math.round(carbs||0)+'g'],['fat',Math.round(fat||0)+'g']].map(([l,v])=>`
-      <div style="text-align:center;background:rgba(255,255,255,0.15);border-radius:7px;padding:0.45rem">
-        <div style="font-size:1.05rem;font-weight:700">${v}</div>
-        <div style="font-size:0.68rem;opacity:0.7">${l}</div>
-      </div>`).join('')}
-    </div>
-    <div style="font-size:0.78rem;opacity:0.7">💡 ${escHtml(note||'AI estimate')}</div>`;
+// ---- Meal builder (add multiple items, see macros, then save together) ----
+function renderMealBuilder() {
+  const wrap = document.getElementById('mealBuilder');
+  const list = document.getElementById('mealItemsList');
+  if (!mealItems.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const t = mealItems.reduce((a,f)=>({cal:a.cal+(f.calories||0),p:a.p+(f.protein||0),c:a.c+(f.carbs||0),fat:a.fat+(f.fat||0)}),{cal:0,p:0,c:0,fat:0});
+  document.getElementById('mealTotals').textContent =
+    `${Math.round(t.cal)} kcal · P ${Math.round(t.p)}g · C ${Math.round(t.c)}g · F ${Math.round(t.fat)}g`;
+  list.innerHTML = mealItems.map((f,i) => `
+    <div class="food-entry">
+      <div class="food-entry-icon">🍽️</div>
+      <div class="food-entry-info">
+        <div class="food-entry-name">${escHtml(f.name)}${f.portion ? ' · '+escHtml(f.portion) : ''}</div>
+        <div class="food-entry-portion">P ${Math.round(f.protein||0)}g · C ${Math.round(f.carbs||0)}g · F ${Math.round(f.fat||0)}g</div>
+      </div>
+      <div class="food-entry-cal">${Math.round(f.calories)} kcal</div>
+      <button class="food-entry-del" onclick="removeMealItem(${i})" title="Remove"><i class="fas fa-times"></i></button>
+    </div>`).join('');
+  document.getElementById('saveMealBtn').innerHTML = `<i class="fas fa-floppy-disk"></i> Save Meal to Log (${mealItems.length} item${mealItems.length>1?'s':''})`;
 }
 
-async function analyzeFood() {
+function removeMealItem(i) { mealItems.splice(i,1); renderMealBuilder(); }
+
+// Analyze one item with AI and append it to the meal builder
+async function analyzeAndAdd() {
   const name = document.getElementById('foodName').value.trim();
   const portion = document.getElementById('foodPortion').value.trim();
   const meal = document.getElementById('mealType').value;
@@ -259,32 +280,35 @@ async function analyzeFood() {
     try { info = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
     catch { const m = raw.match(/\{[\s\S]*\}/); info = m ? JSON.parse(m[0]) : null; }
     if (!info) throw new Error('Could not parse response');
-    pendingFood = { name, portion: portion||'standard serving', calories: info.calories,
-      protein: info.protein_g, carbs: info.carbs_g, fat: info.fat_g, meal, date: currentDate };
-    box.innerHTML = buildNutritionHTML(name, portion, info.calories, info.protein_g, info.carbs_g, info.fat_g, info.notes);
-    document.getElementById('addManualBtn').style.display = 'flex';
+    mealItems.push({ name, portion: portion||'standard serving', calories: info.calories||0,
+      protein: info.protein_g||0, carbs: info.carbs_g||0, fat: info.fat_g||0, meal, date: currentDate });
+    box.className = 'ai-result-box';
+    box.innerHTML = '';
+    document.getElementById('foodName').value = '';
+    document.getElementById('foodPortion').value = '';
+    document.getElementById('foodName').focus();
+    renderMealBuilder();
+    showToast(`✓ "${name}" added — ${Math.round(info.calories||0)} kcal`);
   } catch(e) {
     box.innerHTML = `<span style="color:#ffaaaa">⚠️ ${escHtml(e.message)}</span>`;
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Calculate Calories';
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Add Item';
   }
 }
 
-async function addAnalyzedFood() {
-  if (!pendingFood) return;
-  const btn = document.getElementById('addManualBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner" style="border-top-color:var(--green-700)"></span>';
+// Save every queued item as its own log entry (so each shows separately)
+async function saveMeal() {
+  if (!mealItems.length) { showToast('Add at least one item first'); return; }
+  const btn = document.getElementById('saveMealBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving...';
   try {
-    await Storage.addFood(pendingFood);
-    showToast(`✓ "${pendingFood.name}" added — ${Math.round(pendingFood.calories)} kcal`);
-    pendingFood = null;
-    document.getElementById('foodName').value = '';
-    document.getElementById('foodPortion').value = '';
-    document.getElementById('aiResultBox').className = 'ai-result-box';
-    btn.style.display = 'none';
+    for (const item of mealItems) await Storage.addFood(item);
+    showToast(`✓ Meal saved — ${mealItems.length} item${mealItems.length>1?'s':''} logged`);
+    mealItems = [];
+    renderMealBuilder();
     await loadDayLog();
-  } catch(e) { showToast('Error saving'); }
-  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Add'; }
+  } catch(e) { showToast('Error saving meal'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Meal to Log'; }
 }
 
 async function deleteFood(id) {
@@ -340,7 +364,7 @@ async function removeFromLibrary(id) {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && ['foodName','foodPortion'].includes(document.activeElement?.id)) {
-    if (pendingFood) addAnalyzedFood(); else analyzeFood();
+    e.preventDefault(); analyzeAndAdd();
   }
 });
 
