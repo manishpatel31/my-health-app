@@ -78,7 +78,7 @@ const Storage = (() => {
       return await createGist();
     }
     try {
-      const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders() });
+      const res = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders(), cache: 'no-store' });
       if (!res.ok) {
         // 401/403 = token problem (often a fine-grained token, which can't read gists),
         // 404 = wrong gist id or this token can't see it. Don't silently fall back to empty.
@@ -130,12 +130,20 @@ const Storage = (() => {
     if (!gistId) { await createGist(data); return; }
     try {
       const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-        method: 'PATCH', headers: await ghHeaders(), body: JSON.stringify(body)
+        method: 'PATCH', headers: await ghHeaders(), body: JSON.stringify(body), cache: 'no-store'
       });
-      if (!res.ok) { _online = false; throw new Error(`HTTP ${res.status}`); }
+      if (!res.ok) {
+        // 404/403 on a write you can READ almost always means: this token can see the
+        // (secret) gist but doesn't OWN it — i.e. the two devices use tokens from
+        // different GitHub accounts. You can only edit gists your own account created.
+        const msg = (res.status === 404 || res.status === 403)
+          ? '⚠️ Can\'t save to this Gist — both devices must use a token from the SAME GitHub account (you can read someone else\'s gist but only edit your own).'
+          : `⚠️ Save failed (HTTP ${res.status}) — your latest change may not be synced.`;
+        throw new Error(msg);
+      }
     } catch(e) {
       console.warn('Gist save failed', e);
-      _notify('⚠️ Save failed — your latest change may not be synced.');
+      _notify(e.message.startsWith('⚠️') ? e.message : '⚠️ Save failed — your latest change may not be synced.');
     }
   }
 
@@ -145,15 +153,23 @@ const Storage = (() => {
     const { token, gistId } = getConfig();
     if (!token) return { ok: false, message: 'No GitHub token set.' };
     try {
-      // /gists requires the gist scope; this catches fine-grained / wrong-scope tokens.
-      const res = await fetch('https://api.github.com/gists?per_page=1', { headers: await ghHeaders() });
-      if (res.status === 401) return { ok: false, message: 'Token is invalid or expired.' };
-      if (res.status === 403) return { ok: false, message: 'Token lacks gist access. Use a CLASSIC token with the "gist" scope (fine-grained tokens can\'t access gists).' };
-      if (!res.ok) return { ok: false, message: `GitHub error (HTTP ${res.status}).` };
+      // Identify the account this token belongs to (also validates token + scope).
+      const meRes = await fetch('https://api.github.com/user', { headers: await ghHeaders(), cache: 'no-store' });
+      if (meRes.status === 401) return { ok: false, message: 'Token is invalid or expired.' };
+      if (meRes.status === 403) return { ok: false, message: 'Token lacks access. Use a CLASSIC token with the "gist" scope (fine-grained tokens can\'t access gists).' };
+      if (!meRes.ok) return { ok: false, message: `GitHub error (HTTP ${meRes.status}).` };
+      const me = await meRes.json();
+      const myLogin = me.login;
       if (gistId) {
-        const r2 = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders() });
+        const r2 = await fetch(`https://api.github.com/gists/${gistId}`, { headers: await ghHeaders(), cache: 'no-store' });
         if (r2.status === 404) return { ok: false, message: 'Gist ID not found for this token/account.' };
         if (!r2.ok) return { ok: false, message: `Couldn't open that Gist (HTTP ${r2.status}).` };
+        const g = await r2.json();
+        const ownerLogin = g.owner && g.owner.login;
+        // You can READ a secret gist with any token, but only EDIT one your account owns.
+        if (ownerLogin && myLogin && ownerLogin !== myLogin) {
+          return { ok: false, message: `This Gist belongs to "${ownerLogin}" but your token is for "${myLogin}". Both devices must use a token from the SAME GitHub account to sync.` };
+        }
         return { ok: true, message: 'Connected — syncing to your saved Gist.', gistId };
       }
       const found = await findExistingGist();
@@ -170,7 +186,7 @@ const Storage = (() => {
   // so a second device using the same token syncs to the existing gist instead of creating a new one
   async function findExistingGist() {
     try {
-      const res = await fetch('https://api.github.com/gists?per_page=100', { headers: await ghHeaders() });
+      const res = await fetch('https://api.github.com/gists?per_page=100', { headers: await ghHeaders(), cache: 'no-store' });
       if (!res.ok) return null;
       const gists = await res.json();
       const match = gists.find(g => g.files && g.files[GIST_FILENAME]);

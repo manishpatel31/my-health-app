@@ -1,6 +1,27 @@
 // ===== VITALGREEN v2 — SHARED UTILITIES =====
 let _dashSnapshot = null; // holds weights/foods/settings for on-demand AI insight
 
+// ---- Live sync ----
+// This app has no backend/websocket — data lives in a GitHub Gist that other devices
+// write to. We can't get instant push updates, but we can get close: re-fetch as soon
+// as the app/tab regains focus (covers switching back from another app, unlocking the
+// phone, etc.) plus a light poll while the page stays open, so edits from another
+// device show up without the user having to close and reopen the app.
+function initLiveSync(refreshFn, intervalMs = 10000) {
+  if (typeof refreshFn !== 'function') return;
+  let running = false;
+  const tick = async () => {
+    if (running) return; // avoid overlapping fetches if one is already in flight
+    running = true;
+    try { await refreshFn(); } catch (e) { console.warn('Live sync refresh failed', e); }
+    running = false;
+  };
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(); });
+  window.addEventListener('focus', tick);
+  window.addEventListener('online', tick);
+  setInterval(() => { if (document.visibilityState === 'visible') tick(); }, intervalMs);
+}
+
 // ---- Setup ----
 async function saveSetup() {
   const token   = document.getElementById('ghToken')?.value?.trim();
@@ -332,7 +353,8 @@ function renderMiniWeightChart(weights) {
     ctx.fillText('Log your weight to see trends', canvas.width/2, 75); return;
   }
   const labels = weights.map(w => { const d=new Date(w.date); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'}); });
-  new Chart(canvas, {
+  if (canvas._chart) canvas._chart.destroy();
+  canvas._chart = new Chart(canvas, {
     type:'line', data:{ labels, datasets:[{
       data: weights.map(w=>w.kg), borderColor:'#2d8a55', backgroundColor:'rgba(45,138,85,0.08)',
       borderWidth:2.5, pointBackgroundColor:'#2d8a55', pointRadius:4, tension:0.4, fill:true
@@ -343,8 +365,21 @@ function renderMiniWeightChart(weights) {
   });
 }
 
+// The exact numbers the plan is grounded in — used to detect when logging more
+// food/steps has made a cached plan stale, without ever auto-calling the AI.
+function dailyPlanFacts() {
+  const { weights=[], foods=[], settings={}, walksToday=[] } = _dashSnapshot || {};
+  const todayKcal = Math.round(foods.reduce((s,f)=>s+(f.calories||0),0));
+  const goal = settings.calorieGoal || 2000;
+  const stepsSoFar = walksToday.reduce((s,w)=>s+(w.steps||0),0);
+  const stepsGoal = settings.dailyStepsGoal || 8000;
+  return { todayKcal, goal, stepsSoFar, stepsGoal };
+}
+
 // Renders the daily action plan WITHOUT calling the AI. Shows the cached plan for
 // today (if any), otherwise a Generate button. AI is only called on button press.
+// If today's logging has changed since the plan was generated, flags it as stale
+// (still requires a manual tap to regenerate — we never auto-call the AI).
 function renderDailyInsightBanner() {
   const el = document.getElementById('aiInsightBanner'); if (!el) return;
   if (!Storage.getConfig().groqKey) { el.style.display='none'; return; }
@@ -353,7 +388,13 @@ function renderDailyInsightBanner() {
   try { cached = JSON.parse(localStorage.getItem('vg_daily_insight') || 'null'); } catch {}
   const genBtn = (label) => `<button class="insight-gen-btn" onclick="generateDailyInsight()">${label}</button>`;
   if (cached && cached.date === Storage.today() && cached.text) {
-    el.innerHTML = `<div class="insight-content"><span class="insight-icon">📋</span><div>${formatDailyTips(cached.text)}</div></div>${genBtn('<i class="fas fa-rotate-right"></i> Regenerate')}`;
+    const now = dailyPlanFacts();
+    const stale = cached.facts && (
+      cached.facts.todayKcal !== now.todayKcal || cached.facts.goal !== now.goal ||
+      cached.facts.stepsSoFar !== now.stepsSoFar || cached.facts.stepsGoal !== now.stepsGoal
+    );
+    const staleNote = stale ? `<div class="insight-stale">📊 You've logged more since this was made — tap Regenerate for fresh numbers</div>` : '';
+    el.innerHTML = `<div class="insight-content"><span class="insight-icon">📋</span><div>${formatDailyTips(cached.text)}${staleNote}</div></div>${genBtn('<i class="fas fa-rotate-right"></i> Regenerate')}`;
   } else {
     el.innerHTML = `<div class="insight-content"><span class="insight-icon">✨</span><p>Get today's action plan — exact calories left, steps to walk, and what to do next.</p></div>${genBtn('<i class="fas fa-wand-magic-sparkles"></i> Generate today’s plan')}`;
   }
@@ -401,7 +442,7 @@ async function generateDailyInsight() {
 Write exactly 3 short action items for the rest of today as a bullet list (one line each, start each line with "- "). You MUST use the exact numbers given above (steps, kcal) — do not invent new numbers or estimates. Be direct, specific and motivating. No intro, no headings, just the 3 bullets.`;
     const reply = await callGroq([{role:'user',content:prompt}],
       'You are a sharp, numbers-driven health coach. Always reuse the exact figures the user gives you instead of making up your own.');
-    localStorage.setItem('vg_daily_insight', JSON.stringify({ date: Storage.today(), text: reply }));
+    localStorage.setItem('vg_daily_insight', JSON.stringify({ date: Storage.today(), text: reply, facts: { todayKcal: Math.round(todayKcal), goal, stepsSoFar, stepsGoal } }));
     renderDailyInsightBanner();
   } catch(e) {
     el.innerHTML = `<div class="insight-content"><span class="insight-icon">⚠️</span><p>Couldn't generate your plan — check your Groq API key in settings.</p></div><button class="insight-gen-btn" onclick="generateDailyInsight()"><i class="fas fa-rotate-right"></i> Try again</button>`;
