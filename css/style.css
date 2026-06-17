@@ -339,3 +339,59 @@ a:hover{color:var(--green-700)}
 @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
 canvas{border-radius:var(--radius-md)}
 .fade-in-up{animation:slideUp .5s cubic-bezier(0.34,1.2,0.64,1) both}
+
+/* ===== HOME: ENERGY / DEFICIT CARD ===== */
+.energy-card{background:linear-gradient(135deg,rgba(28,107,68,0.92),rgba(21,80,51,0.92));color:#fff;border:1px solid rgba(255,255,255,0.18)}
+.energy-card .card-title{color:rgba(255,255,255,0.85)}
+.energy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.55rem}
+.energy-item{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.16);border-radius:var(--radius-md);padding:0.75rem 0.4rem;text-align:center}
+.energy-item.e-tdee{background:rgba(255,255,255,0.18)}
+.energy-item.e-target{background:linear-gradient(135deg,rgba(56,196,125,0.55),rgba(111,224,166,0.4));border-color:rgba(255,255,255,0.35)}
+.e-val{font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.e-label{font-size:0.66rem;font-weight:600;margin-top:0.3rem;line-height:1.25;text-transform:uppercase;letter-spacing:0.03em}
+.e-label span{font-weight:400;text-transform:none;letter-spacing:0;opacity:0.8}
+.energy-goal-line{margin-top:0.9rem;font-size:0.9rem;line-height:1.55;color:rgba(255,255,255,0.95)}
+.energy-goal-line strong{color:#d4f8e4}
+@media(max-width:480px){.energy-grid{grid-template-columns:repeat(2,1fr)}.e-val{font-size:1.25rem}}
+
+/* ===== HOME: STREAK + WATER DUO ===== */
+.home-duo{display:grid;grid-template-columns:1fr;gap:1.1rem;margin-bottom:1.1rem}
+@media(min-width:680px){.home-duo{grid-template-columns:1fr 1fr}}
+.home-duo .card{margin-bottom:0}
+
+/* Streak */
+.streak-top{display:flex;align-items:center;gap:0.9rem;margin-bottom:1rem}
+.streak-flame{font-size:2.8rem;line-height:1;filter:drop-shadow(0 4px 10px rgba(255,107,53,0.35))}
+.streak-num{font-size:1.8rem;font-weight:700;color:var(--ink);line-height:1}
+.streak-num span{font-size:0.95rem;font-weight:500;color:var(--muted)}
+.streak-msg{font-size:0.82rem;color:var(--ink-soft);margin-top:0.25rem}
+.streak-best{font-size:0.72rem;color:var(--muted);margin-top:0.15rem}
+.badge-row{display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem}
+.badge{display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.55rem 0.2rem;border-radius:var(--radius-md);background:rgba(255,255,255,0.4);border:1px solid var(--glass-border);opacity:0.4;filter:grayscale(1);transition:all .25s}
+.badge.got{opacity:1;filter:none;background:linear-gradient(135deg,rgba(56,196,125,0.18),rgba(255,255,255,0.5));border-color:var(--green-200)}
+.badge-emoji{font-size:1.3rem}
+.badge-label{font-size:0.58rem;font-weight:600;color:var(--ink-soft);text-align:center;line-height:1.1}
+.streak-foot{margin-top:0.7rem;font-size:0.72rem;color:var(--muted);text-align:center}
+
+/* Water */
+.water-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0.6rem}
+.water-num{font-size:1.5rem;font-weight:700;color:var(--ink)}
+.water-num span{font-size:0.85rem;font-weight:500;color:var(--muted)}
+.water-ml{font-size:0.8rem;color:var(--blue);font-weight:600}
+.water-glasses{display:flex;flex-wrap:wrap;gap:0.3rem;font-size:1.15rem}
+.glass{transition:transform .2s}
+.glass.full{animation:bounce .4s}
+.water-btns{display:flex;gap:0.5rem;margin-top:0.9rem}
+.water-btns .btn-secondary{width:auto;flex:none}
+
+/* ===== HOME: REMINDERS ===== */
+.rem-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.7rem 0;border-bottom:1px solid rgba(37,154,95,0.12)}
+.rem-row.rem-master{border-bottom:2px solid rgba(37,154,95,0.2);margin-bottom:0.2rem}
+.rem-label{display:block;font-size:0.9rem;font-weight:600;color:var(--ink)}
+.rem-sub{display:block;font-size:0.74rem;color:var(--muted);margin-top:0.15rem}
+.rem-row input[type=checkbox]{width:42px;height:24px;-webkit-appearance:none;appearance:none;background:rgba(93,119,104,0.3);border-radius:100px;position:relative;cursor:pointer;transition:background .25s;flex-shrink:0}
+.rem-row input[type=checkbox]:checked{background:var(--green-500)}
+.rem-row input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.rem-row input[type=checkbox]:checked::after{transform:translateX(18px)}
+.rem-row input[type=checkbox]:disabled{opacity:0.45;cursor:not-allowed}
+.rem-note{font-size:0.74rem;color:var(--muted);line-height:1.5;margin-top:0.8rem;background:rgba(91,141,238,0.08);padding:0.6rem 0.75rem;border-radius:var(--radius-sm)}

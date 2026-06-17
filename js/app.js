@@ -57,10 +57,13 @@ async function initDashboard() {
       d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
   }
 
-  const [weights, foods, settings, walks] = await Promise.all([
-    Storage.getWeights(), Storage.getFoods(Storage.today()),
-    Storage.getSettings(), Storage.getWalks(Storage.today()),
+  const [weights, allFoods, settings, allWalks, allWater] = await Promise.all([
+    Storage.getWeights(), Storage.getFoods(),
+    Storage.getSettings(), Storage.getWalks(), Storage.getWater(),
   ]);
+  const today = Storage.today();
+  const foods = allFoods.filter(f => f.date === today);
+  const walks = allWalks.filter(w => w.date === today);
 
   // Weight stat
   const weightEl = document.getElementById('statWeight');
@@ -117,8 +120,165 @@ async function initDashboard() {
 
   renderFoodPreview(foods);
   renderMiniWeightChart(weights.slice(0,14).reverse());
+  renderEnergyCard(weights, settings);
+  renderStreakCard(allFoods, allWalks, allWater, weights);
+  renderWaterWidget(allWater, settings);
+  renderCalorieTrend(allFoods, settings);
   _dashSnapshot = { weights, foods, settings };
   renderDailyInsightBanner();
+}
+
+// ===== ENERGY / DEFICIT CARD (TDEE → how much to eat to hit your goal) =====
+function renderEnergyCard(weights, settings) {
+  const el = document.getElementById('energyCard'); if (!el) return;
+  const cw = weights[0]?.kg;
+  if (!cw || !settings.heightCm) {
+    el.innerHTML = `<div class="card-title">⚡ Your Energy Needs</div>
+      <p class="empty-state" style="margin:0">Add your weight and set up your profile to see how many calories your body needs.
+      <a href="pages/insights.html">Open the planner →</a></p>`;
+    return;
+  }
+  const r = calcDeficit(settings, cw);
+  const targetW = settings.targetWeightKg;
+  const goalLine = targetW
+    ? (Math.abs(cw - targetW) < 0.1
+        ? `🎉 You're at your target weight of <strong>${targetW} kg</strong>!`
+        : `To reach <strong>${targetW} kg</strong>, eat <strong>${r.targetCal} kcal/day</strong>` +
+          (r.weeksToGoal ? ` — about <strong>${r.weeksToGoal} weeks</strong> away.` : '.'))
+    : `Set a target weight in the planner to get a daily calorie target.`;
+  el.innerHTML = `
+    <div class="card-title">⚡ Your Energy Needs</div>
+    <div class="energy-grid">
+      <div class="energy-item"><div class="e-val">${r.bmr}</div><div class="e-label">BMR<br><span>at rest</span></div></div>
+      <div class="energy-item e-tdee"><div class="e-val">${r.tdee}</div><div class="e-label">TDEE<br><span>burned/day</span></div></div>
+      <div class="energy-item"><div class="e-val">−${r.dailyDeficit}</div><div class="e-label">Deficit<br><span>to lose ${settings.weeklyLossKg||0.5}kg/wk</span></div></div>
+      <div class="energy-item e-target"><div class="e-val">${r.targetCal}</div><div class="e-label">Eat this<br><span>kcal/day</span></div></div>
+    </div>
+    <p class="energy-goal-line">${goalLine}</p>`;
+}
+
+// ===== STREAK + GAMIFICATION =====
+function loggedDateSet(allFoods, allWalks, allWater, weights) {
+  const s = new Set();
+  (allFoods||[]).forEach(f => f.date && s.add(f.date));
+  (allWalks||[]).forEach(w => (w.steps>0) && s.add(w.date));
+  (allWater||[]).forEach(w => (w.glasses>0) && s.add(w.date));
+  (weights||[]).forEach(w => w.date && s.add(w.date));
+  return s;
+}
+function computeStreak(dateSet) {
+  const dayMs = 86400000;
+  const fmt = d => d.toISOString().split('T')[0];
+  let cur = 0;
+  const start = new Date();
+  // If today not logged yet, the streak can still be "alive" from yesterday
+  if (!dateSet.has(fmt(start))) start.setTime(start.getTime() - dayMs);
+  let cursor = new Date(start);
+  while (dateSet.has(fmt(cursor))) { cur++; cursor.setTime(cursor.getTime() - dayMs); }
+  // best streak across all logged dates
+  const sorted = [...dateSet].sort();
+  let best = 0, run = 0, prev = null;
+  for (const ds of sorted) {
+    if (prev && (new Date(ds) - new Date(prev)) === dayMs) run++; else run = 1;
+    best = Math.max(best, run); prev = ds;
+  }
+  return { current: cur, best };
+}
+function earnedBadges(streak, dateSet, allFoods, weights, allWater) {
+  const days = dateSet.size;
+  const waterDays = (allWater||[]).filter(w => w.glasses>=8).length;
+  const all = [
+    { id:'first',  emoji:'🌱', label:'First Log',     got: days >= 1 },
+    { id:'s3',     emoji:'🔥', label:'3-Day Streak',  got: streak.best >= 3 },
+    { id:'s7',     emoji:'⚡', label:'7-Day Streak',  got: streak.best >= 7 },
+    { id:'s30',    emoji:'🏆', label:'30-Day Streak', got: streak.best >= 30 },
+    { id:'food50', emoji:'🍽️', label:'50 Meals',      got: (allFoods||[]).length >= 50 },
+    { id:'weigh10',emoji:'⚖️', label:'10 Weigh-ins',  got: (weights||[]).length >= 10 },
+    { id:'hydrate',emoji:'💧', label:'Hydrated 5×',   got: waterDays >= 5 },
+    { id:'commit', emoji:'💎', label:'30 Days Logged', got: days >= 30 },
+  ];
+  return all;
+}
+function renderStreakCard(allFoods, allWalks, allWater, weights) {
+  const el = document.getElementById('streakCard'); if (!el) return;
+  const dateSet = loggedDateSet(allFoods, allWalks, allWater, weights);
+  const streak = computeStreak(dateSet);
+  const badges = earnedBadges(streak, dateSet, allFoods, weights, allWater);
+  const earned = badges.filter(b => b.got);
+  const flame = streak.current > 0 ? '🔥' : '💤';
+  const msg = streak.current === 0 ? 'Log anything today to start a streak!'
+    : streak.current === 1 ? 'Nice start — come back tomorrow to keep it going!'
+    : `${streak.current} days strong — keep it up! 💪`;
+  el.innerHTML = `
+    <div class="streak-top">
+      <div class="streak-flame">${flame}</div>
+      <div class="streak-info">
+        <div class="streak-num">${streak.current} <span>day${streak.current===1?'':'s'}</span></div>
+        <div class="streak-msg">${msg}</div>
+        <div class="streak-best">Best: ${streak.best} days</div>
+      </div>
+    </div>
+    <div class="badge-row">
+      ${badges.map(b => `<div class="badge ${b.got?'got':''}" title="${b.label}">
+        <span class="badge-emoji">${b.emoji}</span><span class="badge-label">${b.label}</span></div>`).join('')}
+    </div>
+    <div class="streak-foot">${earned.length}/${badges.length} badges earned</div>`;
+}
+
+// ===== WATER INTAKE WIDGET =====
+async function renderWaterWidget(allWater, settings) {
+  const el = document.getElementById('waterWidget'); if (!el) return;
+  const today = Storage.today();
+  const goal = settings.waterGoalGlasses || 8;
+  const cur = (allWater||[]).find(w => w.date === today)?.glasses || 0;
+  const pct = Math.min(100, Math.round(cur/goal*100));
+  const glasses = Array.from({length: goal}, (_,i) =>
+    `<span class="glass ${i < cur ? 'full':''}">${i < cur ? '💧' : '🥛'}</span>`).join('');
+  el.innerHTML = `
+    <div class="card-title">💧 Water Intake</div>
+    <div class="water-top">
+      <div class="water-num">${cur} <span>/ ${goal} glasses</span></div>
+      <div class="water-ml">${(cur*250).toLocaleString()} ml</div>
+    </div>
+    <div class="water-glasses">${glasses}</div>
+    <div class="progress-bar-wrap" style="margin-top:0.7rem"><div class="progress-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,#5b8dee,#6fc3ff)"></div></div>
+    <div class="water-btns">
+      <button class="btn-secondary" onclick="changeWater(-1)"><i class="fas fa-minus"></i></button>
+      <button class="btn-primary" style="flex:1" onclick="changeWater(1)"><i class="fas fa-plus"></i> Add a glass (250ml)</button>
+    </div>`;
+}
+async function changeWater(delta) {
+  await Storage.addWater(delta);
+  const [allWater, settings] = await Promise.all([Storage.getWater(), Storage.getSettings()]);
+  renderWaterWidget(allWater, settings);
+  if (delta > 0) {
+    const cur = (allWater||[]).find(w => w.date === Storage.today())?.glasses || 0;
+    if (cur === (settings.waterGoalGlasses||8)) showToast('🎉 Hydration goal reached!');
+  }
+}
+
+// ===== 7-DAY CALORIE TREND (mini bar chart) =====
+function renderCalorieTrend(allFoods, settings) {
+  const canvas = document.getElementById('calorieTrendChart'); if (!canvas) return;
+  const goal = settings.calorieGoal || 2000;
+  const days = [], labels = [], totals = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    days.push(ds);
+    labels.push(d.toLocaleDateString('en-IN',{weekday:'short'}));
+    totals.push((allFoods||[]).filter(f => f.date === ds).reduce((s,f)=>s+(f.calories||0),0));
+  }
+  const colors = totals.map(t => t === 0 ? 'rgba(93,119,104,0.18)' : t > goal ? '#ff6b35' : '#38c47d');
+  if (canvas._chart) canvas._chart.destroy();
+  canvas._chart = new Chart(canvas, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: totals, backgroundColor: colors, borderRadius:8, maxBarThickness:38 }] },
+    options:{ responsive:true, plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label: c => `${Math.round(c.raw)} kcal` } } },
+      scales:{ y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{family:'DM Sans'},color:'#6b8070'} },
+               x:{ grid:{display:false}, ticks:{font:{family:'DM Sans'},color:'#6b8070'} } } }
+  });
 }
 
 function renderFoodPreview(foods) {
@@ -260,3 +420,109 @@ async function callGroq(messages, systemPrompt, maxTokens=800) {
   const data = await res.json();
   return data.choices[0].message.content;
 }
+
+// ===== PWA: register service worker (works on every page) =====
+function initPWA() {
+  if (!('serviceWorker' in navigator)) return;
+  const swUrl = location.pathname.includes('/pages/') ? '../sw.js' : './sw.js';
+  navigator.serviceWorker.register(swUrl).catch(e => console.warn('SW register failed', e));
+}
+
+// ===== LOCAL REMINDERS / NOTIFICATIONS =====
+// Note: these are in-app reminders that fire while the app/tab is open. A static
+// site has no push server, so they can't fire when the app is fully closed.
+function getReminderPrefs() {
+  try { return { enabled:false, water:true, food:true, weight:true, ...JSON.parse(localStorage.getItem('vg_reminders')||'{}') }; }
+  catch { return { enabled:false, water:true, food:true, weight:true }; }
+}
+function setReminderPrefs(p) { localStorage.setItem('vg_reminders', JSON.stringify(p)); }
+
+async function vgNotify(title, body, tag) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration?.();
+    if (reg && reg.active) reg.active.postMessage({ type:'notify', title, body, tag });
+    else new Notification(title, { body });
+  } catch { try { new Notification(title, { body }); } catch {} }
+}
+
+function reminderSlots(p) {
+  const slots = [];
+  if (p.weight) slots.push(['08:00','⚖️ Time to weigh in','Log your weight to track your progress.']);
+  if (p.food) {
+    slots.push(['09:00','🌅 Breakfast time','Log your breakfast in VitalGreen.']);
+    slots.push(['13:30','☀️ Lunch time',"Don't forget to log your lunch."]);
+    slots.push(['20:00','🌙 Dinner time','Log your dinner to close out the day.']);
+  }
+  if (p.water) ['10:00','12:00','14:00','16:00','18:00'].forEach(t =>
+    slots.push([t,'💧 Hydration check','Have a glass of water and log it.']));
+  return slots;
+}
+
+let _reminderTimer = null;
+function initReminders() {
+  const p = getReminderPrefs();
+  if (!p.enabled) return;
+  if (_reminderTimer) clearInterval(_reminderTimer);
+  checkReminders();
+  _reminderTimer = setInterval(checkReminders, 60 * 1000);
+}
+function checkReminders() {
+  const p = getReminderPrefs();
+  if (!p.enabled || !('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const hhmm = now.toTimeString().slice(0,5);
+  const today = Storage.today();
+  let fired = {}; try { fired = JSON.parse(localStorage.getItem('vg_rem_fired')||'{}'); } catch {}
+  reminderSlots(p).forEach(([t,title,body]) => {
+    if (hhmm === t) {
+      const key = today + '_' + t;
+      if (!fired[key]) { vgNotify(title, body, 'vg-'+t); fired[key] = 1; }
+    }
+  });
+  Object.keys(fired).forEach(k => { if (!k.startsWith(today)) delete fired[k]; });
+  localStorage.setItem('vg_rem_fired', JSON.stringify(fired));
+}
+
+// Reminders UI (rendered on the home page)
+function renderReminderCard() {
+  const el = document.getElementById('reminderCard'); if (!el) return;
+  const p = getReminderPrefs();
+  const supported = 'Notification' in window;
+  const denied = supported && Notification.permission === 'denied';
+  if (!supported) { el.innerHTML = `<div class="card-title">🔔 Reminders</div><p class="empty-state" style="margin:0">Notifications aren't supported on this browser.</p>`; return; }
+  const row = (id,label,sub,on) => `
+    <label class="rem-row">
+      <span><span class="rem-label">${label}</span><span class="rem-sub">${sub}</span></span>
+      <input type="checkbox" ${on?'checked':''} ${p.enabled?'':'disabled'} onchange="toggleReminderType('${id}',this.checked)"/>
+    </label>`;
+  el.innerHTML = `
+    <div class="card-title">🔔 Reminders</div>
+    <label class="rem-row rem-master">
+      <span><span class="rem-label">Enable reminders</span><span class="rem-sub">${denied?'Blocked — allow notifications in browser settings':'Get nudges while the app is open'}</span></span>
+      <input type="checkbox" ${p.enabled?'checked':''} ${denied?'disabled':''} onchange="setRemindersEnabled(this.checked)"/>
+    </label>
+    ${row('weight','⚖️ Weigh-in','Every morning at 8:00 AM', p.weight)}
+    ${row('food','🍽️ Meal logging','Breakfast, lunch & dinner', p.food)}
+    ${row('water','💧 Hydration','Every 2 hours, 10AM–6PM', p.water)}
+    <p class="rem-note">ℹ️ Reminders fire while VitalGreen is open in a tab. Install the app (Add to Home Screen) for the best experience.</p>`;
+}
+async function setRemindersEnabled(on) {
+  const p = getReminderPrefs();
+  if (on && Notification.permission !== 'granted') {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { showToast('Enable notifications in your browser to use reminders'); renderReminderCard(); return; }
+  }
+  p.enabled = on; setReminderPrefs(p);
+  showToast(on ? '🔔 Reminders enabled' : 'Reminders turned off');
+  renderReminderCard();
+  if (on) { initReminders(); vgNotify('🌿 VitalGreen reminders on', "We'll nudge you to log while the app is open."); }
+  else if (_reminderTimer) clearInterval(_reminderTimer);
+}
+function toggleReminderType(type, on) {
+  const p = getReminderPrefs(); p[type] = on; setReminderPrefs(p);
+}
+
+// Boot PWA + reminders on every page
+initPWA();
+initReminders();

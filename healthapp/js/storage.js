@@ -36,12 +36,14 @@ const Storage = (() => {
       foods: [],
       foodLibrary: [],   // saved foods for quick-add
       walks: [],         // walk log entries
+      water: [],         // water intake entries
       settings: {
         calorieGoal: 2000,
         heightCm: null,
         targetWeightKg: null,
         weeklyLossKg: 0.5,
         dailyStepsGoal: 8000,
+        waterGoalGlasses: 8,
         activityLevel: 'moderate',
         age: null,
         gender: 'male',
@@ -71,7 +73,9 @@ const Storage = (() => {
       // migrate old data
       if (!data.foodLibrary) data.foodLibrary = [];
       if (!data.walks) data.walks = [];
+      if (!data.water) data.water = [];
       if (!data.settings.dailyStepsGoal) data.settings.dailyStepsGoal = 8000;
+      if (!data.settings.waterGoalGlasses) data.settings.waterGoalGlasses = 8;
       if (!data.settings.targetWeightKg) data.settings.targetWeightKg = null;
       if (!data.settings.weeklyLossKg) data.settings.weeklyLossKg = 0.5;
       setCache(data);
@@ -189,11 +193,29 @@ const Storage = (() => {
     return date ? all.filter(w => w.date === date) : all;
   }
 
+  // ---- Water ----
+  // Adjust today's (or given day's) water by +/- glasses; never below 0
+  async function addWater(glasses, date) {
+    const data = await loadData();
+    const d = date || today();
+    data.water = data.water || [];
+    let entry = data.water.find(w => w.date === d);
+    if (!entry) { entry = { id: Date.now(), date: d, glasses: 0, ts: Date.now() }; data.water.unshift(entry); }
+    entry.glasses = Math.max(0, (entry.glasses||0) + glasses);
+    await saveData(data); return entry;
+  }
+  async function getWater(date) {
+    const d = await loadData(); const all = d.water||[];
+    if (!date) return all;
+    const e = all.find(w => w.date === date);
+    return e ? e.glasses : 0;
+  }
+
   // ---- Settings ----
   async function getSettings() {
     const d = await loadData();
     return { calorieGoal:2000, heightCm:null, targetWeightKg:null, weeklyLossKg:0.5,
-      dailyStepsGoal:8000, activityLevel:'moderate', age:null, gender:'male',
+      dailyStepsGoal:8000, waterGoalGlasses:8, activityLevel:'moderate', age:null, gender:'male',
       ...d.settings };
   }
   async function saveSettings(patch) {
@@ -211,6 +233,7 @@ const Storage = (() => {
     addFood, deleteFood, getFoods,
     getFoodLibrary, deleteFoodFromLibrary,
     addWalk, setSteps, deleteWalk, getWalks,
+    addWater, getWater,
     getSettings, saveSettings,
     today,
   };
