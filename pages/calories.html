@@ -142,6 +142,7 @@
 </nav>
 
 <script src="../js/storage.js"></script>
+<script src="../js/foodDatabase.js"></script>
 <script src="../js/app.js"></script>
 <script>
 let mealItems = [];           // items queued in the meal builder before saving
@@ -274,7 +275,17 @@ function renderMealBuilder() {
 
 function removeMealItem(i) { mealItems.splice(i,1); renderMealBuilder(); }
 
-// Analyze ALL the items in the rows in a single AI call, then queue them for review
+// A leading number in the qty field ("2 pcs", "1.5 bowl") scales the database's
+// standard-portion values; anything else (e.g. "1 bowl", blank) is treated as 1x.
+function parseMultiplier(qty) {
+  const m = (qty || '').trim().match(/^(\d+(\.\d+)?)/);
+  return m ? parseFloat(m[1]) : 1;
+}
+function round1(n) { return Math.round(n * 10) / 10; }
+
+// Look up each item in the local food database first (free, instant, exact figures).
+// Only items with no confident local match are sent to the AI, in one batched call,
+// so token usage scales with unknown foods rather than every item logged.
 async function analyzeAllAndReview() {
   const items = collectEntryRows();
   const meal = document.getElementById('mealType').value;
@@ -283,34 +294,59 @@ async function analyzeAllAndReview() {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
   const box = document.getElementById('aiResultBox');
   box.className = 'ai-result-box show';
-  box.innerHTML = `<span style="opacity:0.6">🤖 AI is calculating nutrition for ${items.length} item${items.length>1?'s':''}...</span>`;
+  box.innerHTML = `<span style="opacity:0.6">🔎 Checking food database...</span>`;
+
+  const results = new Array(items.length);
+  const unresolvedIdx = [];
+  items.forEach((item, i) => {
+    const match = FoodDB.find(item.name);
+    if (match) {
+      const mult = parseMultiplier(item.qty);
+      results[i] = {
+        name: item.name, portion: item.qty || match.portion,
+        calories: round1(match.calories*mult), protein: round1(match.protein*mult),
+        carbs: round1(match.carbs*mult), fat: round1(match.fat*mult),
+      };
+    } else {
+      unresolvedIdx.push(i);
+    }
+  });
+
   try {
-    const list = items.map((x,i) => `${i+1}. ${x.name}${x.qty ? ', '+x.qty : ', standard serving'}`).join('\n');
-    const raw = await callGroq([{role:'user',content:
-      `Calculate nutrition for each food below. Respond ONLY with a JSON array, one object per item, in the same order:
+    if (unresolvedIdx.length) {
+      box.innerHTML = `<span style="opacity:0.6">🤖 ${items.length-unresolvedIdx.length} matched from database — asking AI for ${unresolvedIdx.length} more...</span>`;
+      const unresolvedItems = unresolvedIdx.map(i => items[i]);
+      const list = unresolvedItems.map((x,i) => `${i+1}. ${x.name}${x.qty ? ', '+x.qty : ', standard serving'}`).join('\n');
+      const raw = await callGroq([{role:'user',content:
+        `Calculate nutrition for each food below. Respond ONLY with a JSON array, one object per item, in the same order:
 [{"name":"<food>","portion":"<qty>","calories":<num>,"protein_g":<num>,"carbs_g":<num>,"fat_g":<num>}]
 
 Items:
 ${list}`}],
-      'You are a precise nutritionist. Respond ONLY with a valid JSON array. No markdown, no text outside the array.');
-    let arr;
-    try { arr = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-    catch { const m = raw.match(/\[[\s\S]*\]/); arr = m ? JSON.parse(m[0]) : null; }
-    if (!Array.isArray(arr) || !arr.length) throw new Error('Could not parse response');
-    arr.forEach((info, i) => {
-      mealItems.push({
-        name: info.name || items[i]?.name || 'Food',
-        portion: info.portion || items[i]?.qty || 'standard serving',
-        calories: info.calories||0, protein: info.protein_g||0, carbs: info.carbs_g||0, fat: info.fat_g||0,
-        meal, date: currentDate });
-    });
+        'You are a precise nutritionist. Respond ONLY with a valid JSON array. No markdown, no text outside the array.', 500, 0.2);
+      let arr;
+      try { arr = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+      catch { const m = raw.match(/\[[\s\S]*\]/); arr = m ? JSON.parse(m[0]) : null; }
+      if (!Array.isArray(arr) || !arr.length) throw new Error('Could not parse response');
+      arr.forEach((info, j) => {
+        const i = unresolvedIdx[j];
+        results[i] = {
+          name: info.name || items[i]?.name || 'Food',
+          portion: info.portion || items[i]?.qty || 'standard serving',
+          calories: info.calories||0, protein: info.protein_g||0, carbs: info.carbs_g||0, fat: info.fat_g||0,
+        };
+      });
+    }
+    let savedCount = 0;
+    results.forEach(r => { if (r) { mealItems.push({ ...r, meal, date: currentDate }); savedCount++; } });
     box.className = 'ai-result-box'; box.innerHTML = '';
     // reset rows to a clean trio
     document.getElementById('entryRows').innerHTML = '';
     addEntryRow(); addEntryRow(); addEntryRow();
     renderMealBuilder();
     document.getElementById('mealBuilder').scrollIntoView({behavior:'smooth',block:'nearest'});
-    showToast(`✓ ${arr.length} item${arr.length>1?'s':''} analyzed — review & save below`);
+    const dbCount = items.length - unresolvedIdx.length;
+    showToast(`✓ ${savedCount} item${savedCount>1?'s':''} ready (${dbCount} from database${unresolvedIdx.length?`, ${unresolvedIdx.length} via AI`:''}) — review & save below`);
   } catch(e) {
     box.innerHTML = `<span style="color:#ffaaaa">⚠️ ${escHtml(e.message)}</span>`;
   } finally {

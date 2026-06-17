@@ -513,7 +513,7 @@ function caloriesToSteps(cal, weightKg) {
 }
 
 // ---- Groq API ----
-async function callGroq(messages, systemPrompt, maxTokens=800) {
+async function callGroq(messages, systemPrompt, maxTokens=800, temperature=0.7) {
   const { groqKey } = Storage.getConfig();
   if (!groqKey) throw new Error('Groq API key not set');
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -522,7 +522,7 @@ async function callGroq(messages, systemPrompt, maxTokens=800) {
     body: JSON.stringify({
       model: 'llama-3.1-8b-instant',
       messages: [{ role:'system', content: systemPrompt||'You are a helpful health assistant.' }, ...messages],
-      temperature: 0.7, max_tokens: maxTokens,
+      temperature, max_tokens: maxTokens,
     })
   });
   if (!res.ok) { const e=await res.json(); throw new Error(e.error?.message||'Groq API error'); }
