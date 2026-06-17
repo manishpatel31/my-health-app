@@ -49,19 +49,8 @@
   <!-- TAB: AI Log -->
   <div id="tab-ai">
     <div class="food-input-card">
-      <h3><i class="fas fa-wand-magic-sparkles" style="margin-right:0.5rem;opacity:0.7"></i>Add each item one by one — build your full meal, then save</h3>
-      <div class="food-input-row">
-        <div class="form-group">
-          <label>Food Item</label>
-          <input type="text" id="foodName" placeholder="e.g. roti, dal, sabji, rice" autocomplete="off"/>
-          <div id="autocompleteList" style="display:none;background:rgba(255,255,255,0.15);border-radius:8px;margin-top:0.35rem;overflow:hidden"></div>
-        </div>
-        <div class="form-group">
-          <label>Quantity</label>
-          <input type="text" id="foodPortion" placeholder="e.g. 2 pieces, 1 bowl, 200g"/>
-        </div>
-      </div>
-      <div class="form-group" style="margin-top:0.5rem;margin-bottom:0">
+      <h3><i class="fas fa-wand-magic-sparkles" style="margin-right:0.5rem;opacity:0.7"></i>List everything you ate — add a row per item, then analyze together</h3>
+      <div class="form-group" style="margin-bottom:0.75rem">
         <label>Meal Type</label>
         <select id="mealType">
           <option value="breakfast">🌅 Breakfast</option>
@@ -70,10 +59,19 @@
           <option value="snack">🍪 Snack</option>
         </select>
       </div>
+
+      <!-- dynamic multi-item entry rows -->
+      <datalist id="foodOptions"></datalist>
+      <div id="entryRows"></div>
+
+      <button class="btn-secondary" onclick="addEntryRow()" id="addRowBtn" style="width:100%;margin-top:0.5rem">
+        <i class="fas fa-plus"></i> Add another item
+      </button>
+
       <div id="aiResultBox" class="ai-result-box"></div>
       <div style="margin-top:0.75rem">
-        <button class="btn-primary" onclick="analyzeAndAdd()" id="analyzeBtn">
-          <i class="fas fa-plus"></i> Add Item
+        <button class="btn-primary" onclick="analyzeAllAndReview()" id="analyzeBtn">
+          <i class="fas fa-wand-magic-sparkles"></i> Analyze All Items
         </button>
       </div>
     </div>
@@ -164,42 +162,50 @@ async function initCaloriePage() {
   const meal = h < 10 ? 'breakfast' : h < 14 ? 'lunch' : h < 18 ? 'snack' : 'dinner';
   document.getElementById('mealType').value = meal;
   await loadDayLog();
-  setupAutocomplete();
+  await loadFoodOptions();
+  // start with a few empty rows so it's clear multiple items are supported
+  addEntryRow(); addEntryRow(); addEntryRow();
 }
 
-function setupAutocomplete() {
-  const inp = document.getElementById('foodName');
-  inp.addEventListener('input', async () => {
-    const q = inp.value.trim().toLowerCase();
-    if (q.length < 2) { hideAutocomplete(); return; }
-    const lib = await Storage.getFoodLibrary();
-    const matches = lib.filter(f => f.name.toLowerCase().includes(q)).slice(0,5);
-    if (!matches.length) { hideAutocomplete(); return; }
-    const list = document.getElementById('autocompleteList');
-    list.style.display = 'block';
-    list.innerHTML = matches.map(f => `
-      <div onclick="selectLibraryFood(${f.id})" style="padding:0.55rem 0.75rem;cursor:pointer;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.1);transition:background .15s" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background=''">
-        <span style="color:white;font-weight:500">${escHtml(f.name)}</span>
-        <span style="color:rgba(255,255,255,0.6);font-size:0.75rem;margin-left:0.5rem">${f.portion||''} · ${Math.round(f.calories)} kcal</span>
-      </div>`).join('');
-  });
-  document.addEventListener('click', e => { if (!e.target.closest('#foodName') && !e.target.closest('#autocompleteList')) hideAutocomplete(); });
-}
-
-function hideAutocomplete() { document.getElementById('autocompleteList').style.display = 'none'; }
-
-// Pick from autocomplete / library — adds straight to the meal (no AI call needed)
-async function selectLibraryFood(id) {
+// Populate the <datalist> so each row input suggests your saved foods
+async function loadFoodOptions() {
   const lib = await Storage.getFoodLibrary();
-  const item = lib.find(f => f.id === id); if (!item) return;
-  hideAutocomplete();
-  mealItems.push({ name: item.name, portion: item.portion || '', calories: item.calories,
-    protein: item.protein_g||item.protein||0, carbs: item.carbs_g||item.carbs||0, fat: item.fat_g||item.fat||0,
-    meal: document.getElementById('mealType').value, date: currentDate });
-  document.getElementById('foodName').value = '';
-  document.getElementById('foodPortion').value = '';
-  renderMealBuilder();
-  showToast(`✓ "${item.name}" added to meal`);
+  const dl = document.getElementById('foodOptions');
+  dl.innerHTML = lib.slice(0,100).map(f => `<option value="${escHtml(f.name)}"></option>`).join('');
+}
+
+// ---- Multi-item entry rows ----
+function addEntryRow(name='', qty='') {
+  const wrap = document.getElementById('entryRows');
+  const row = document.createElement('div');
+  row.className = 'entry-row';
+  row.style.cssText = 'display:flex;gap:0.5rem;align-items:flex-end;margin-bottom:0.5rem';
+  row.innerHTML = `
+    <div class="form-group" style="flex:2;margin-bottom:0">
+      <input type="text" class="rowName" list="foodOptions" placeholder="e.g. roti, dal, sabji" value="${escHtml(name)}" autocomplete="off"/>
+    </div>
+    <div class="form-group" style="flex:1;margin-bottom:0">
+      <input type="text" class="rowQty" placeholder="2 pcs / 1 bowl" value="${escHtml(qty)}"/>
+    </div>
+    <button type="button" class="entry-row-del" onclick="removeEntryRow(this)" title="Remove"
+      style="height:44px;width:42px;flex:none;border:1px solid var(--border);background:rgba(255,255,255,0.5);border-radius:10px;color:var(--muted);cursor:pointer">
+      <i class="fas fa-times"></i>
+    </button>`;
+  wrap.appendChild(row);
+  return row;
+}
+
+function removeEntryRow(btn) {
+  const rows = document.querySelectorAll('#entryRows .entry-row');
+  if (rows.length <= 1) { btn.closest('.entry-row').querySelectorAll('input').forEach(i=>i.value=''); return; }
+  btn.closest('.entry-row').remove();
+}
+
+function collectEntryRows() {
+  return [...document.querySelectorAll('#entryRows .entry-row')].map(r => ({
+    name: r.querySelector('.rowName').value.trim(),
+    qty:  r.querySelector('.rowQty').value.trim(),
+  })).filter(x => x.name);
 }
 
 async function loadDayLog() {
@@ -261,38 +267,47 @@ function renderMealBuilder() {
 
 function removeMealItem(i) { mealItems.splice(i,1); renderMealBuilder(); }
 
-// Analyze one item with AI and append it to the meal builder
-async function analyzeAndAdd() {
-  const name = document.getElementById('foodName').value.trim();
-  const portion = document.getElementById('foodPortion').value.trim();
+// Analyze ALL the items in the rows in a single AI call, then queue them for review
+async function analyzeAllAndReview() {
+  const items = collectEntryRows();
   const meal = document.getElementById('mealType').value;
-  if (!name) { showToast('Please enter a food item'); return; }
-  hideAutocomplete();
+  if (!items.length) { showToast('Add at least one food item'); return; }
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
   const box = document.getElementById('aiResultBox');
   box.className = 'ai-result-box show';
-  box.innerHTML = '<span style="opacity:0.6">🤖 AI is calculating nutrition...</span>';
+  box.innerHTML = `<span style="opacity:0.6">🤖 AI is calculating nutrition for ${items.length} item${items.length>1?'s':''}...</span>`;
   try {
-    const raw = await callGroq([{role:'user',content:`Calculate nutrition for: ${name}, ${portion||'standard serving'}. Respond ONLY in JSON: {"calories":<num>,"protein_g":<num>,"carbs_g":<num>,"fat_g":<num>,"notes":"<brief>"}`}],
-      'You are a precise nutritionist. Respond ONLY with valid JSON. No markdown, no text outside the JSON object.');
-    let info;
-    try { info = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-    catch { const m = raw.match(/\{[\s\S]*\}/); info = m ? JSON.parse(m[0]) : null; }
-    if (!info) throw new Error('Could not parse response');
-    mealItems.push({ name, portion: portion||'standard serving', calories: info.calories||0,
-      protein: info.protein_g||0, carbs: info.carbs_g||0, fat: info.fat_g||0, meal, date: currentDate });
-    box.className = 'ai-result-box';
-    box.innerHTML = '';
-    document.getElementById('foodName').value = '';
-    document.getElementById('foodPortion').value = '';
-    document.getElementById('foodName').focus();
+    const list = items.map((x,i) => `${i+1}. ${x.name}${x.qty ? ', '+x.qty : ', standard serving'}`).join('\n');
+    const raw = await callGroq([{role:'user',content:
+      `Calculate nutrition for each food below. Respond ONLY with a JSON array, one object per item, in the same order:
+[{"name":"<food>","portion":"<qty>","calories":<num>,"protein_g":<num>,"carbs_g":<num>,"fat_g":<num>}]
+
+Items:
+${list}`}],
+      'You are a precise nutritionist. Respond ONLY with a valid JSON array. No markdown, no text outside the array.');
+    let arr;
+    try { arr = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch { const m = raw.match(/\[[\s\S]*\]/); arr = m ? JSON.parse(m[0]) : null; }
+    if (!Array.isArray(arr) || !arr.length) throw new Error('Could not parse response');
+    arr.forEach((info, i) => {
+      mealItems.push({
+        name: info.name || items[i]?.name || 'Food',
+        portion: info.portion || items[i]?.qty || 'standard serving',
+        calories: info.calories||0, protein: info.protein_g||0, carbs: info.carbs_g||0, fat: info.fat_g||0,
+        meal, date: currentDate });
+    });
+    box.className = 'ai-result-box'; box.innerHTML = '';
+    // reset rows to a clean trio
+    document.getElementById('entryRows').innerHTML = '';
+    addEntryRow(); addEntryRow(); addEntryRow();
     renderMealBuilder();
-    showToast(`✓ "${name}" added — ${Math.round(info.calories||0)} kcal`);
+    document.getElementById('mealBuilder').scrollIntoView({behavior:'smooth',block:'nearest'});
+    showToast(`✓ ${arr.length} item${arr.length>1?'s':''} analyzed — review & save below`);
   } catch(e) {
     box.innerHTML = `<span style="color:#ffaaaa">⚠️ ${escHtml(e.message)}</span>`;
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Add Item';
+    btn.disabled = false; btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Analyze All Items';
   }
 }
 
@@ -307,6 +322,7 @@ async function saveMeal() {
     mealItems = [];
     renderMealBuilder();
     await loadDayLog();
+    await loadFoodOptions();
   } catch(e) { showToast('Error saving meal'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Meal to Log'; }
 }
@@ -363,8 +379,14 @@ async function removeFromLibrary(id) {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && ['foodName','foodPortion'].includes(document.activeElement?.id)) {
-    e.preventDefault(); analyzeAndAdd();
+  const el = document.activeElement;
+  if (e.key !== 'Enter' || !el) return;
+  // Enter on a row input → add a fresh row (so you can keep typing items fast)
+  if (el.classList?.contains('rowName') || el.classList?.contains('rowQty')) {
+    e.preventDefault();
+    const rows = [...document.querySelectorAll('#entryRows .entry-row')];
+    const isLast = el.closest('.entry-row') === rows[rows.length-1];
+    if (isLast) { const r = addEntryRow(); r.querySelector('.rowName').focus(); }
   }
 });
 
