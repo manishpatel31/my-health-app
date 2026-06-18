@@ -90,10 +90,58 @@ const UI = (() => {
     root.querySelectorAll?.('.reveal:not(.revealed)').forEach(el => revealObserver.observe(el));
   }
 
+  // ---- Floating action button with an expanding quick-log menu ----
+  // Injected on every page so we don't have to edit each page's markup.
+  function buildFab() {
+    if (document.getElementById('vgFab') || !document.body) return;
+    const inPages = location.pathname.includes('/pages/');
+    const base = inPages ? '' : 'pages/';
+    const home = inPages ? '../index.html' : 'index.html';
+
+    const scrim = document.createElement('div');
+    scrim.className = 'fab-scrim'; scrim.id = 'vgFabScrim';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'fab-wrap'; wrap.id = 'vgFab';
+    wrap.innerHTML =
+      `<div class="fab-menu" id="vgFabMenu">
+         <a class="fab-item" style="--i:3" href="${base}calories.html"><span class="fab-label">Food</span><span class="fab-ic"><i class="fas fa-utensils"></i></span></a>
+         <a class="fab-item" style="--i:2" href="${base}weight.html"><span class="fab-label">Weight</span><span class="fab-ic"><i class="fas fa-weight-scale"></i></span></a>
+         <a class="fab-item" style="--i:1" href="${base}walk.html"><span class="fab-label">Walk</span><span class="fab-ic"><i class="fas fa-person-walking"></i></span></a>
+         <button class="fab-item" style="--i:0" type="button" data-water><span class="fab-label">Water +250ml</span><span class="fab-ic">💧</span></button>
+       </div>
+       <button class="fab-main" id="vgFabBtn" type="button" aria-label="Quick add" aria-expanded="false"><i class="fas fa-plus"></i></button>`;
+
+    document.body.appendChild(scrim);
+    document.body.appendChild(wrap);
+
+    const btn = wrap.querySelector('#vgFabBtn');
+    const setOpen = (open) => {
+      wrap.classList.toggle('open', open);
+      scrim.classList.toggle('show', open);
+      btn.setAttribute('aria-expanded', String(open));
+      haptic(open ? 'medium' : 'light');
+    };
+    btn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!wrap.classList.contains('open')); });
+    scrim.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+    wrap.querySelectorAll('a.fab-item').forEach(a => a.addEventListener('click', () => setOpen(false)));
+
+    const waterBtn = wrap.querySelector('[data-water]');
+    if (waterBtn) waterBtn.addEventListener('click', async () => {
+      setOpen(false);
+      try {
+        if (typeof window.changeWater === 'function') { await window.changeWater(1); window.showToast?.('💧 +1 glass logged'); }
+        else { location.href = home; }
+      } catch { location.href = home; }
+    });
+  }
+
   function init() {
     wireHaptics();      // delegated press feedback — safe before full DOM parse
     wrapToast();        // showToast is declared by app.js, which loads before this file
     initReveal();       // observe any .reveal elements already in the document
+    buildFab();         // inject the floating quick-log button
   }
 
   // This script sits at the end of <body>, so the DOM is ready; init immediately
