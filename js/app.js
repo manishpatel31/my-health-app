@@ -48,6 +48,8 @@ async function showSettings() {
   const el3 = document.getElementById('groqKey'); if (el3) el3.value = cfg.groqKey || '';
   const el4 = document.getElementById('gistIdField');
   if (el4) el4.value = cfg.gistId || '';
+  const hap = document.getElementById('hapticsToggle');
+  if (hap && typeof UI !== 'undefined') hap.checked = UI.hapticsEnabled();
   document.getElementById('setupModal')?.classList.remove('hidden');
 }
 
