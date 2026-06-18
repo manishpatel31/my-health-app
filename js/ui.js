@@ -138,6 +138,22 @@ const UI = (() => {
     });
   }
 
+  // ---- Tiny inline SVG trend line for stat cards ----
+  function sparklineSvg(values, { width = 64, height = 28, color = '#38c47d', fill = true } = {}) {
+    const vals = (values || []).filter(v => typeof v === 'number' && !isNaN(v));
+    if (vals.length < 2) return '';
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const range = max - min || 1;
+    const step = width / (vals.length - 1);
+    const pts = vals.map((v, i) => [Math.round(i * step * 10) / 10, Math.round((height - ((v - min) / range) * height) * 10) / 10]);
+    const lineStr = pts.map(p => p.join(',')).join(' ');
+    const areaStr = fill ? `${pts[0][0]},${height} ${lineStr} ${pts[pts.length - 1][0]},${height}` : '';
+    return `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" preserveAspectRatio="none">
+      ${fill ? `<polygon points="${areaStr}" fill="${color}" opacity="0.12"/>` : ''}
+      <polyline points="${lineStr}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  }
+
   function init() {
     wireHaptics();      // delegated press feedback — safe before full DOM parse
     wrapToast();        // showToast is declared by app.js, which loads before this file
@@ -150,5 +166,5 @@ const UI = (() => {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-  return { haptic, setHaptics, hapticsEnabled, countUp, initReveal, scanReveal, reduceMotion };
+  return { haptic, setHaptics, hapticsEnabled, countUp, initReveal, scanReveal, reduceMotion, sparkline: sparklineSvg };
 })();

@@ -164,6 +164,95 @@ async function initDashboard() {
   try { renderStreakCard(allFoods, allWalks, allWater, weights); } catch(e) { console.error('renderStreakCard failed', e); }
   try { renderWaterWidget(allWater, settings); } catch(e) { console.error('renderWaterWidget failed', e); }
   try { renderCalorieTrend(allFoods, settings); } catch(e) { console.error('renderCalorieTrend failed', e); }
+  try { renderHealthScore(foods, walks, allWater, settings, weights, allFoods, allWalks); } catch(e) { console.error('renderHealthScore failed', e); }
+  try { renderConditionSparklines(weights, allFoods, allWalks, settings); } catch(e) { console.error('renderConditionSparklines failed', e); }
+  try { initMoodRow(); } catch(e) { console.error('initMoodRow failed', e); }
+}
+
+// ===== MOOD CHECK-IN (local-only, not synced to the Gist backend) =====
+function moodKey() { return `vg_mood_${Storage.today()}`; }
+function setMood(btn, mood) {
+  localStorage.setItem(moodKey(), mood);
+  document.querySelectorAll('#moodOptions .mood-btn').forEach(b => b.classList.toggle('active', b === btn));
+  if (typeof UI !== 'undefined') UI.haptic('medium');
+  showToast?.(`Mood logged: ${btn.title}`);
+}
+function initMoodRow() {
+  const saved = localStorage.getItem(moodKey());
+  if (!saved) return;
+  const btn = document.querySelector(`#moodOptions .mood-btn[data-mood="${saved}"]`);
+  if (btn) btn.classList.add('active');
+}
+
+// ===== HEALTH SCORE (composite 0-100, averaged across available components) =====
+function renderHealthScore(foods, walks, allWater, settings, weights, allFoods, allWalks) {
+  const arc = document.getElementById('scoreArc'); if (!arc) return;
+  const scores = [];
+
+  const calGoal = settings.calorieGoal;
+  if (calGoal) {
+    const total = foods.reduce((s,f) => s + (f.calories||0), 0);
+    scores.push(Math.max(0, 100 - Math.min(100, Math.abs(total - calGoal) / calGoal * 100)));
+  }
+
+  const stepsGoal = settings.dailyStepsGoal;
+  if (stepsGoal) {
+    const totalSteps = walks.reduce((s,w) => s + (w.steps||0), 0);
+    scores.push(Math.min(100, Math.round(totalSteps / stepsGoal * 100)));
+  }
+
+  const dateSet = loggedDateSet(allFoods, allWalks, allWater, weights);
+  const streak = computeStreak(dateSet);
+  scores.push(Math.min(100, streak.current / 7 * 100));
+
+  const waterGoal = settings.waterGoalGlasses || 8;
+  const today = Storage.today();
+  const cur = (allWater||[]).find(w => w.date === today)?.glasses || 0;
+  scores.push(Math.min(100, Math.round(cur / waterGoal * 100)));
+
+  const score = scores.length ? Math.round(scores.reduce((a,b) => a+b, 0) / scores.length) : 0;
+  const circumference = 213.6;
+  const offset = circumference - (score / 100) * circumference;
+  arc.style.transition = 'stroke-dashoffset 1s cubic-bezier(0.34,1.2,0.64,1)';
+  requestAnimationFrame(() => { arc.style.strokeDashoffset = offset; });
+
+  const numEl = document.getElementById('scoreNum');
+  if (numEl) { if (typeof UI !== 'undefined') UI.countUp(numEl, score); else numEl.textContent = score; }
+
+  const titleEl = document.getElementById('scoreTitle');
+  const subEl = document.getElementById('scoreSub');
+  if (titleEl && subEl) {
+    if (score >= 80) { titleEl.textContent = "You're on track!"; subEl.textContent = 'Keep up your healthy habits'; }
+    else if (score >= 50) { titleEl.textContent = 'Making progress'; subEl.textContent = 'A little more consistency will help'; }
+    else { titleEl.textContent = "Let's get moving"; subEl.textContent = 'Log your meals, steps and water today'; }
+  }
+}
+
+// ===== CONDITION SPARKLINES (7-day mini trend per stat card) =====
+function renderConditionSparklines(weights, allFoods, allWalks, settings) {
+  if (typeof UI === 'undefined' || !UI.sparkline) return;
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  const calSeries = days.map(ds => (allFoods||[]).filter(f => f.date === ds).reduce((s,f)=>s+(f.calories||0),0));
+  const stepsSeries = days.map(ds => (allWalks||[]).filter(w => w.date === ds).reduce((s,w)=>s+(w.steps||0),0));
+  const weightSeries = days.map(ds => {
+    const match = (weights||[]).find(w => w.date === ds);
+    return match ? match.kg : null;
+  }).filter(v => v !== null);
+  const h = settings.heightCm ? settings.heightCm / 100 : null;
+  const bmiSeries = h ? weightSeries.map(kg => kg / (h*h)) : [];
+
+  const set = (id, series, color) => {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = UI.sparkline(series, { color });
+  };
+  set('statWeightSpark', weightSeries, '#38c47d');
+  set('statBMISpark', bmiSeries, '#14b8a6');
+  set('statCalSpark', calSeries, '#ff6b35');
+  set('statStepsSpark', stepsSeries, '#5b8dee');
 }
 
 // ===== ENERGY / DEFICIT CARD (TDEE → how much to eat to hit your goal) =====

@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
-<body>
+<body class="page-insights">
 <nav class="navbar">
   <a href="../index.html" class="nav-brand"><span class="brand-leaf">🌿</span><span class="brand-name">VitalGreen</span></a>
   <div class="nav-links">
@@ -38,6 +38,21 @@
     <div class="ws-card"><div class="ws-val" id="wsAvgCal">—</div><div class="ws-label">Avg. kcal/day</div></div>
     <div class="ws-card"><div class="ws-val" id="wsWeightDelta">—</div><div class="ws-label">Weight change</div></div>
     <div class="ws-card"><div class="ws-val" id="wsTotalSteps">—</div><div class="ws-label">Steps this week</div></div>
+  </div>
+
+  <!-- Weekly Activity Chart -->
+  <div class="card chart-card reveal">
+    <div class="card-title">📊 Weekly Calories <span class="chart-period">Sun – Sat</span></div>
+    <div class="chart-canvas-wrap">
+      <canvas id="weeklyBarChart" height="170"></canvas>
+      <div class="chart-bubble" id="weeklyChartBubble" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Performance Insights -->
+  <div class="card perf-card reveal">
+    <div class="card-title">⚡ Performance Insights</div>
+    <div class="perf-list" id="perfList"></div>
   </div>
 
   <!-- Calorie Deficit Planner -->
@@ -167,6 +182,7 @@
   <a href="changelog.html" class="bnav-link"><i class="fas fa-clock-rotate-left"></i><span>Changelog</span></a>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../js/storage.js"></script>
 <script src="../js/app.js"></script>
 <script src="../js/ui.js"></script>
@@ -228,6 +244,60 @@ async function initInsightsPage() {
 
   // Show cached insights only — do NOT auto-call the AI (saves tokens)
   ['eat','timing','metabolism','week'].forEach(showCachedInsight);
+
+  renderWeeklyChart(allFoods);
+  renderPerfList(avgCal, weekSteps, weights, settings);
+}
+
+// ---- Weekly calorie bar chart (Sun-Sat), today's bar highlighted ----
+function renderWeeklyChart(allFoods) {
+  const canvas = document.getElementById('weeklyBarChart'); if (!canvas) return;
+  const labels = [], totals = [], days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split('T')[0];
+    days.push(ds);
+    labels.push(d.toLocaleDateString('en-IN',{weekday:'short'}));
+    totals.push((allFoods||[]).filter(f => f.date === ds).reduce((s,f)=>s+(f.calories||0),0));
+  }
+  const todayIdx = days.length - 1;
+  const colors = totals.map((t,i) => i === todayIdx ? '#7dd3fc' : 'rgba(255,255,255,0.18)');
+  if (canvas._chart) canvas._chart.destroy();
+  canvas._chart = new Chart(canvas, {
+    type:'bar',
+    data:{ labels, datasets:[{ data: totals, backgroundColor: colors, borderRadius:8, maxBarThickness:30 }] },
+    options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `${Math.round(c.raw)} kcal` } } },
+      scales:{ y:{ beginAtZero:true, grid:{color:'rgba(255,255,255,0.08)'}, ticks:{font:{family:'DM Sans'},color:'rgba(255,255,255,0.65)'} },
+               x:{ grid:{display:false}, ticks:{font:{family:'DM Sans'},color:'rgba(255,255,255,0.65)'} } } }
+  });
+  const bubble = document.getElementById('weeklyChartBubble');
+  if (bubble && totals[todayIdx] > 0) {
+    bubble.style.display = 'block';
+    bubble.textContent = `Today: ${Math.round(totals[todayIdx]).toLocaleString()} kcal`;
+  }
+}
+
+// ---- Performance Insights row list ----
+function renderPerfList(avgCal, weekSteps, weights, settings) {
+  const el = document.getElementById('perfList'); if (!el) return;
+  const rows = [];
+  rows.push({ icon:'🔥', label:'Avg calories', value: avgCal ? `${avgCal.toLocaleString()} kcal/day` : '—' });
+  rows.push({ icon:'🚶', label:'Avg steps', value: weekSteps ? `${Math.round(weekSteps/7).toLocaleString()}/day` : '—' });
+  if (weights.length > 0 && settings.heightCm) {
+    const h = settings.heightCm/100;
+    const bmi = (weights[0].kg/(h*h)).toFixed(1);
+    rows.push({ icon:'📐', label:'Current BMI', value: `${bmi} (${bmiCategory(parseFloat(bmi))})` });
+  }
+  if (weights.length >= 2) {
+    const diff = (weights[0].kg - weights[Math.min(7,weights.length-1)].kg).toFixed(1);
+    rows.push({ icon:'⚖️', label:'Weight change', value: `${diff>0?'+':''}${diff} kg this week` });
+  }
+  el.innerHTML = rows.map(r => `
+    <div class="perf-row">
+      <div class="perf-icon">${r.icon}</div>
+      <div class="perf-label">${r.label}</div>
+      <div class="perf-value">${r.value}</div>
+    </div>`).join('');
 }
 
 function insightCacheKey(type){ return 'vg_insight_'+type; }

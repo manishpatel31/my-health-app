@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
-<body>
+<body class="page-coach">
 <nav class="navbar">
   <a href="../index.html" class="nav-brand"><span class="brand-leaf">🌿</span><span class="brand-name">VitalGreen</span></a>
   <div class="nav-links">
@@ -33,17 +33,23 @@
     <p class="page-sub">Powered by Groq · Llama 3.1 · Knows your real data</p>
   </div>
 
-  <div class="chat-suggestions" id="suggestions">
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">📊 Analyse my week</button>
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">🍽️ What should I eat today?</button>
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">🚶 How much should I walk?</button>
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">⚖️ When will I reach my target?</button>
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">💪 Give me a workout plan</button>
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">🥗 Healthy Indian meal plan</button>
-    <button class="suggestion-chip" onclick="sendSuggestion(this)">😴 How does sleep affect weight?</button>
+  <div class="ai-orb-hero reveal" id="aiOrbHero">
+    <div class="ai-orb"><div class="ai-orb-ring"></div><div class="ai-orb-core">✨</div></div>
+    <p class="ai-orb-greet">Hi, can I help you?</p>
+    <p class="ai-orb-sub">Ask me about your meals, steps, weight goal, or just say hi.</p>
   </div>
 
-  <div class="chat-wrap">
+  <div class="chat-suggestions" id="suggestions">
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">📊</span><span class="sc-label">Analyse my week</span></button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">🍽️</span><span class="sc-label">What should I eat today?</span></button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">🚶</span><span class="sc-label">How much should I walk?</span></button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">⚖️</span><span class="sc-label">When will I reach my target?</span></button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">💪</span><span class="sc-label">Give me a workout plan</span></button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">🥗</span><span class="sc-label">Healthy Indian meal plan</span></button>
+    <button class="suggestion-chip" onclick="sendSuggestion(this)"><span class="sc-icon">😴</span><span class="sc-label">How does sleep affect weight?</span></button>
+  </div>
+
+  <div class="chat-wrap" id="chatWrap" style="display:none">
     <div class="chat-messages" id="chatMessages">
       <div class="chat-bubble ai">
         <div class="bubble-label">🌿 VitalGreen Coach</div>
@@ -120,10 +126,17 @@ function sendSuggestion(btn) {
   sendMessage();
 }
 
+function startChat() {
+  document.getElementById('aiOrbHero')?.style.setProperty('display','none');
+  document.getElementById('suggestions').style.display='none';
+  const wrap = document.getElementById('chatWrap');
+  if (wrap.style.display==='none') wrap.style.display='flex';
+}
+
 async function sendMessage() {
   const input = document.getElementById('chatInput');
   const text = input.value.trim(); if (!text) return;
-  document.getElementById('suggestions').style.display='none';
+  startChat();
   appendBubble('user',text);
   chatHistory.push({role:'user',content:text});
   input.value=''; input.style.height='auto';
