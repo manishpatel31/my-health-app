@@ -358,46 +358,18 @@ a:hover{color:var(--green-700)}
 .ws-val{font-family:var(--font-display);font-size:1.45rem;font-weight:600;color:var(--green-700)}
 .ws-label{font-size:0.7rem;color:var(--muted);margin-top:0.2rem}
 
-/* ===== INSIGHTS PAGE — DARK NAVY "ANALYTICS MODE" THEME ===== */
-body.page-insights{
-  background:
-    radial-gradient(1100px 700px at 100% -10%, rgba(56,196,255,0.12), transparent 55%),
-    radial-gradient(900px 700px at 0% 100%, rgba(56,196,125,0.10), transparent 55%),
-    linear-gradient(160deg, #0b1228 0%, #0e1a38 50%, #101d3f 100%);
-  background-attachment:fixed;color:#e8edf7;
-}
-body.page-insights .navbar,body.page-insights .bottom-nav{background:rgba(10,16,38,0.6);border-color:rgba(255,255,255,0.08)}
-body.page-insights .nav-link,body.page-insights .bnav-link{color:rgba(232,237,247,0.6)}
-body.page-insights .nav-link.active,body.page-insights .bnav-link.active{color:#7dd3fc}
-body.page-insights .nav-brand{color:#e8edf7}
-body.page-insights .page-title,body.page-insights .page-sub{color:#e8edf7}
-body.page-insights .page-sub{opacity:0.6}
-body.page-insights::before,body.page-insights::after{display:none}
-body.page-insights .card,body.page-insights .ws-card,body.page-insights .deficit-card,body.page-insights .insight-card{
-  background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-}
-body.page-insights .card-title,body.page-insights .ws-val{color:#e8edf7}
-body.page-insights .ws-label,body.page-insights .muted,body.page-insights label,body.page-insights small{color:rgba(232,237,247,0.55)}
-body.page-insights .form-group input,body.page-insights .form-group select{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:#e8edf7}
-body.page-insights .insight-card-body{color:rgba(232,237,247,0.85)}
-body.page-insights .milestone-row{border-color:rgba(255,255,255,0.08)}
-body.page-insights .milestone-label,body.page-insights .milestone-date,body.page-insights .milestone-weight{color:#e8edf7}
-
+/* ===== INSIGHTS — weekly chart + performance list ===== */
 .chart-card .card-title{display:flex;align-items:center;justify-content:space-between}
 .chart-period{font-size:0.7rem;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0}
-body.page-insights .chart-period{color:rgba(232,237,247,0.45)}
 .chart-canvas-wrap{position:relative}
-.chart-bubble{position:absolute;top:-6px;right:0;background:#7dd3fc;color:#0b1228;font-size:0.72rem;font-weight:700;padding:0.3rem 0.65rem;border-radius:100px;box-shadow:0 4px 14px rgba(125,211,252,0.4)}
+.chart-bubble{position:absolute;top:-6px;right:0;background:linear-gradient(135deg,var(--green-500),var(--green-400));color:#fff;font-size:0.72rem;font-weight:700;padding:0.3rem 0.65rem;border-radius:100px;box-shadow:var(--shadow-glow)}
 
 .perf-list{display:flex;flex-direction:column;gap:0.55rem}
 .perf-row{display:flex;align-items:center;gap:0.7rem;padding:0.65rem 0.2rem;border-bottom:1px solid var(--glass-border)}
 .perf-row:last-child{border-bottom:none}
-.perf-icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,0.06);font-size:1.05rem}
+.perf-icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(37,154,95,0.1);font-size:1.05rem}
 .perf-label{flex:1;font-size:0.85rem;font-weight:600;color:var(--ink-soft)}
-.perf-value{font-size:0.85rem;font-weight:700;font-variant-numeric:tabular-nums}
-body.page-insights .perf-row{border-bottom-color:rgba(255,255,255,0.08)}
-body.page-insights .perf-label{color:rgba(232,237,247,0.75)}
-body.page-insights .perf-value{color:#7dd3fc}
+.perf-value{font-size:0.85rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--green-700)}
 
 /* ===== CHAT ===== */
 .chat-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--nav-h) - var(--bnav-h) - 3rem);min-height:380px}
@@ -417,54 +389,23 @@ body.page-insights .perf-value{color:#7dd3fc}
 .chat-send-btn:hover{filter:brightness(1.08)}
 .chat-send-btn:active{transform:scale(0.92)}
 .chat-send-btn:disabled{background:var(--muted);box-shadow:none}
-.chat-suggestions{display:flex;flex-wrap:wrap;gap:0.45rem;margin-bottom:0.85rem}
-.suggestion-chip{padding:0.45rem 0.85rem;background:var(--glass-bg);backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:100px;font-size:0.78rem;color:var(--green-700);font-weight:600;cursor:pointer;transition:all .2s}
-.suggestion-chip:hover{background:var(--green-100);border-color:var(--green-300);transform:translateY(-2px)}
-
-/* ===== COACH PAGE — PURPLE "AI MODE" THEME ===== */
-body.page-coach{
-  background:
-    radial-gradient(1200px 800px at 10% -5%, rgba(196,158,255,0.45), transparent 55%),
-    radial-gradient(1000px 700px at 100% 0%, rgba(139,109,255,0.40), transparent 50%),
-    radial-gradient(900px 900px at 50% 110%, rgba(91,72,205,0.35), transparent 55%),
-    linear-gradient(160deg, #2a1b54 0%, #4528a0 45%, #6a3fc7 100%);
-  background-attachment:fixed;color:#fff;
-}
-body.page-coach .navbar,body.page-coach .bottom-nav{background:rgba(38,22,82,0.55);border-color:rgba(255,255,255,0.16)}
-body.page-coach .nav-link,body.page-coach .bnav-link{color:rgba(255,255,255,0.75)}
-body.page-coach .nav-link.active,body.page-coach .bnav-link.active{color:#fff}
-body.page-coach .nav-brand{color:#fff}
-body.page-coach .page-title,body.page-coach .page-sub{color:#fff}
-body.page-coach .page-sub{opacity:0.75}
-body.page-coach::before{background:radial-gradient(circle,#c49eff,transparent 70%)}
-body.page-coach::after{background:radial-gradient(circle,#8b6dff,transparent 70%)}
+/* ===== AI COACH — orb hero + suggestion tiles (green theme) ===== */
+.chat-suggestions{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem;margin-bottom:1rem}
+.suggestion-chip{display:flex;flex-direction:column;align-items:flex-start;gap:0.45rem;padding:0.9rem 0.95rem;background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:var(--radius-lg);color:var(--green-800);font-size:0.8rem;font-weight:600;text-align:left;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm)}
+.suggestion-chip:hover{background:rgba(255,255,255,0.75);border-color:var(--green-300);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.sc-icon{font-size:1.3rem}
 
 .ai-orb-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:0.6rem;padding:2.4rem 1rem 1.6rem}
 .ai-orb{position:relative;width:120px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:0.4rem}
-.ai-orb-ring{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(255,255,255,0.45);animation:orbSpin 14s linear infinite}
+.ai-orb-ring{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(37,154,95,0.4);animation:orbSpin 14s linear infinite}
 .ai-orb-core{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:#fff;
-  background:radial-gradient(circle at 35% 30%, #e8d5ff, #9b6bff 55%, #6a3fc7 100%);
-  box-shadow:0 0 40px rgba(196,158,255,0.65), 0 0 80px rgba(139,109,255,0.35);
+  background:radial-gradient(circle at 35% 30%, var(--green-300), var(--green-500) 55%, var(--green-700) 100%);
+  box-shadow:0 0 40px rgba(56,196,125,0.55), 0 0 80px rgba(20,184,166,0.3);
   animation:orbPulse 2.6s ease-in-out infinite}
 @keyframes orbSpin{to{transform:rotate(360deg)}}
 @keyframes orbPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.ai-orb-greet{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:#fff}
-.ai-orb-sub{font-size:0.85rem;color:rgba(255,255,255,0.7);max-width:280px}
-
-body.page-coach .chat-suggestions{display:grid;grid-template-columns:repeat(2,1fr);gap:0.6rem;margin-bottom:1rem}
-body.page-coach .suggestion-chip{display:flex;flex-direction:column;align-items:flex-start;gap:0.45rem;padding:0.9rem 0.95rem;background:rgba(255,255,255,0.1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.18);border-radius:var(--radius-lg);color:#fff;font-size:0.8rem;font-weight:600;text-align:left;box-shadow:0 8px 24px rgba(20,10,50,0.25)}
-body.page-coach .suggestion-chip:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.32);transform:translateY(-2px)}
-body.page-coach .sc-icon{font-size:1.3rem}
-body.page-coach .chat-wrap{background:rgba(255,255,255,0.08);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.16);border-radius:var(--radius-lg);padding:1rem;box-shadow:0 8px 30px rgba(20,10,50,0.25)}
-body.page-coach .chat-bubble.ai{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.2);color:#fff}
-body.page-coach .chat-bubble.ai .bubble-label{color:#e8d5ff}
-body.page-coach .chat-bubble.user{background:linear-gradient(135deg,#9b6bff,#6a3fc7);box-shadow:0 8px 24px rgba(107,67,220,0.45)}
-body.page-coach .chat-input-bar{border-top-color:rgba(255,255,255,0.18)}
-body.page-coach .chat-input-bar textarea{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.22);color:#fff}
-body.page-coach .chat-input-bar textarea::placeholder{color:rgba(255,255,255,0.55)}
-body.page-coach .chat-input-bar textarea:focus{border-color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.16)}
-body.page-coach .chat-send-btn{background:linear-gradient(135deg,#9b6bff,#6a3fc7);box-shadow:0 6px 20px rgba(139,109,255,0.5)}
-body.page-coach .typing-dots span{background:#c49eff}
+.ai-orb-greet{font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--green-900)}
+.ai-orb-sub{font-size:0.85rem;color:var(--muted);max-width:280px}
 
 /* ===== TOAST ===== */
 .toast{position:fixed;bottom:calc(var(--bnav-h) + 1rem);left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,58,36,0.92);backdrop-filter:blur(10px);color:white;padding:0.7rem 1.5rem;border-radius:100px;font-size:0.85rem;font-weight:600;z-index:9000;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,0.15)}

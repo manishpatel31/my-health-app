@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
-<body class="page-insights">
+<body>
 <nav class="navbar">
   <a href="../index.html" class="nav-brand"><span class="brand-leaf">🌿</span><span class="brand-name">VitalGreen</span></a>
   <div class="nav-links">
@@ -261,14 +261,14 @@ function renderWeeklyChart(allFoods) {
     totals.push((allFoods||[]).filter(f => f.date === ds).reduce((s,f)=>s+(f.calories||0),0));
   }
   const todayIdx = days.length - 1;
-  const colors = totals.map((t,i) => i === todayIdx ? '#7dd3fc' : 'rgba(255,255,255,0.18)');
+  const colors = totals.map((t,i) => i === todayIdx ? '#38c47d' : 'rgba(93,119,104,0.18)');
   if (canvas._chart) canvas._chart.destroy();
   canvas._chart = new Chart(canvas, {
     type:'bar',
     data:{ labels, datasets:[{ data: totals, backgroundColor: colors, borderRadius:8, maxBarThickness:30 }] },
     options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `${Math.round(c.raw)} kcal` } } },
-      scales:{ y:{ beginAtZero:true, grid:{color:'rgba(255,255,255,0.08)'}, ticks:{font:{family:'DM Sans'},color:'rgba(255,255,255,0.65)'} },
-               x:{ grid:{display:false}, ticks:{font:{family:'DM Sans'},color:'rgba(255,255,255,0.65)'} } } }
+      scales:{ y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{family:'DM Sans'},color:'#6b8070'} },
+               x:{ grid:{display:false}, ticks:{font:{family:'DM Sans'},color:'#6b8070'} } } }
   });
   const bubble = document.getElementById('weeklyChartBubble');
   if (bubble && totals[todayIdx] > 0) {
