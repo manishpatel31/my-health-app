@@ -380,6 +380,17 @@ a:hover{color:var(--green-700)}
 canvas{border-radius:var(--radius-md)}
 .fade-in-up{animation:slideUp .5s cubic-bezier(0.34,1.2,0.64,1) both}
 
+/* ===== SCROLL REVEAL (opt-in via .reveal, toggled by IntersectionObserver) ===== */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease,transform .65s cubic-bezier(0.34,1.2,0.64,1)}
+.reveal.revealed{opacity:1;transform:none}
+
+/* ===== REDUCED MOTION — honour the OS accessibility preference ===== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  body::before,body::after{animation:none!important}
+  .reveal{opacity:1!important;transform:none!important}
+}
+
 /* ===== HOME: ENERGY / DEFICIT CARD ===== */
 .energy-card{background:linear-gradient(135deg,rgba(28,107,68,0.92),rgba(21,80,51,0.92));color:#fff;border:1px solid rgba(255,255,255,0.18)}
 .energy-card .card-title{color:rgba(255,255,255,0.85)}

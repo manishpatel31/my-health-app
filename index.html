@@ -54,6 +54,14 @@
       </div>
       <small>Using the same GitHub token on another device will auto-sync to this same Gist. Only paste a different ID here if you need to manually point to a specific Gist.</small>
     </div>
+    <div class="modal-section-title">📳 Preferences</div>
+    <div class="rem-row rem-master" style="border:none;margin:0;padding:0.2rem 0">
+      <div>
+        <span class="rem-label">Haptic feedback</span>
+        <span class="rem-sub">Subtle vibrations on taps & actions (supported devices)</span>
+      </div>
+      <input type="checkbox" id="hapticsToggle" onchange="UI.setHaptics(this.checked)"/>
+    </div>
     <button class="btn-primary" onclick="saveSetup()" style="margin-top:0.5rem">Get Started →</button>
   </div>
 </div>
@@ -186,6 +194,7 @@
 <script src="js/storage.js"></script>
 <script src="js/foodDatabase.js"></script>
 <script src="js/app.js"></script>
+<script src="js/ui.js"></script>
 <script>initDashboard(); renderReminderCard(); initLiveSync(initDashboard);</script>
 </body>
 </html>
