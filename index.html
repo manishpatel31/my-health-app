@@ -95,7 +95,42 @@
     <div class="insight-loading"><span class="spinner-sm"></span> Loading your daily insight...</div>
   </div>
 
+  <!-- Mood Check-in -->
+  <section class="mood-row reveal">
+    <p class="mood-prompt">How are you feeling today?</p>
+    <div class="mood-options" id="moodOptions">
+      <button class="mood-btn" data-mood="stressed" title="Stressed" onclick="setMood(this,'stressed')">😩</button>
+      <button class="mood-btn" data-mood="tired" title="Tired" onclick="setMood(this,'tired')">😴</button>
+      <button class="mood-btn" data-mood="okay" title="Okay" onclick="setMood(this,'okay')">🙂</button>
+      <button class="mood-btn" data-mood="joyful" title="Joyful" onclick="setMood(this,'joyful')">😊</button>
+      <button class="mood-btn" data-mood="energized" title="Energized" onclick="setMood(this,'energized')">🤩</button>
+    </div>
+  </section>
+
+  <!-- Health Score -->
+  <div class="card score-card reveal">
+    <div class="score-text">
+      <div class="score-title" id="scoreTitle">You're on track!</div>
+      <div class="score-sub" id="scoreSub">Keep up your healthy habits</div>
+    </div>
+    <div class="score-ring">
+      <svg viewBox="0 0 80 80" width="84" height="84">
+        <defs>
+          <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38c47d"/><stop offset="100%" stop-color="#14b8a6"/>
+          </linearGradient>
+        </defs>
+        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(37,154,95,0.15)" stroke-width="7"/>
+        <circle cx="40" cy="40" r="34" fill="none" stroke="url(#scoreGrad)" stroke-width="7"
+          stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="213.6" id="scoreArc"
+          transform="rotate(-90 40 40)"/>
+      </svg>
+      <div class="score-ring-num"><span id="scoreNum">0</span><span class="score-max">/100</span></div>
+    </div>
+  </div>
+
   <!-- Stats -->
+  <h2 class="section-title">🩺 Your Condition</h2>
   <section class="stats-grid">
     <div class="stat-card stat-weight">
       <div class="stat-icon"><i class="fas fa-weight-scale"></i></div>
@@ -104,6 +139,7 @@
         <span class="stat-value" id="statWeight">— kg</span>
         <span class="stat-delta" id="statWeightDelta"></span>
       </div>
+      <div class="stat-spark" id="statWeightSpark"></div>
     </div>
     <div class="stat-card stat-bmi">
       <div class="stat-icon"><i class="fas fa-chart-simple"></i></div>
@@ -112,6 +148,7 @@
         <span class="stat-value" id="statBMI">—</span>
         <span class="stat-delta" id="statBMILabel"></span>
       </div>
+      <div class="stat-spark" id="statBMISpark"></div>
     </div>
     <div class="stat-card stat-cal">
       <div class="stat-icon"><i class="fas fa-fire"></i></div>
@@ -120,6 +157,7 @@
         <span class="stat-value" id="statCal">0 kcal</span>
         <span class="stat-delta" id="statCalSub">today</span>
       </div>
+      <div class="stat-spark" id="statCalSpark"></div>
     </div>
     <div class="stat-card stat-steps">
       <div class="stat-icon"><i class="fas fa-person-walking"></i></div>
@@ -128,6 +166,7 @@
         <span class="stat-value" id="statSteps">0</span>
         <span class="stat-delta" id="statStepsSub">today</span>
       </div>
+      <div class="stat-spark" id="statStepsSpark"></div>
     </div>
   </section>
 
