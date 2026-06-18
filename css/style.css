@@ -418,6 +418,20 @@ canvas{border-radius:var(--radius-md)}
 .fab-wrap.open .fab-main i{transform:rotate(135deg)}
 .fab-wrap.open .fab-main{box-shadow:0 16px 42px rgba(37,154,95,0.65)}
 
+/* ===== THEMED AMBIENT ANIMATIONS ===== */
+/* Walking figure on the Walk page goal card strides up and down */
+.goal-card::after{animation:walkBob 1.05s ease-in-out infinite}
+@keyframes walkBob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-9px) rotate(5deg)}}
+/* Plate on the food card gently bobs like it is being served */
+.food-input-card::after{animation:foodBob 3.4s ease-in-out infinite}
+@keyframes foodBob{0%,100%{transform:rotate(-15deg) translateY(0)}50%{transform:rotate(-9deg) translateY(-7px)}}
+/* Streak flame flickers */
+.streak-flame{animation:flameFlicker 2.4s ease-in-out infinite}
+@keyframes flameFlicker{0%,100%{transform:scale(1) rotate(-2deg);filter:drop-shadow(0 4px 10px rgba(255,107,53,0.35))}50%{transform:scale(1.09) rotate(2deg);filter:drop-shadow(0 7px 18px rgba(255,107,53,0.6))}}
+/* Light sweep across the AI insight banner */
+.ai-insight-banner::before{content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,0.20),transparent);transform:skewX(-18deg);animation:shimmer 5s ease-in-out infinite;pointer-events:none;z-index:0}
+@keyframes shimmer{0%{left:-60%}55%,100%{left:135%}}
+
 /* ===== HOME: ENERGY / DEFICIT CARD ===== */
 .energy-card{background:linear-gradient(135deg,rgba(28,107,68,0.92),rgba(21,80,51,0.92));color:#fff;border:1px solid rgba(255,255,255,0.18)}
 .energy-card .card-title{color:rgba(255,255,255,0.85)}
