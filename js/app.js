@@ -130,7 +130,8 @@ async function initDashboard() {
   const calEl = document.getElementById('statCal');
   if (calEl) {
     const total = foods.reduce((s,f) => s + (f.calories||0), 0);
-    calEl.textContent = Math.round(total) + ' kcal';
+    if (typeof UI !== 'undefined') UI.countUp(calEl, Math.round(total), { suffix: ' kcal' });
+    else calEl.textContent = Math.round(total) + ' kcal';
     const sub = document.getElementById('statCalSub');
     if (sub && settings.calorieGoal) {
       const rem = settings.calorieGoal - Math.round(total);
@@ -143,7 +144,8 @@ async function initDashboard() {
   const stepsEl = document.getElementById('statSteps');
   if (stepsEl) {
     const totalSteps = walks.reduce((s,w) => s + (w.steps||0), 0);
-    stepsEl.textContent = totalSteps.toLocaleString();
+    if (typeof UI !== 'undefined') UI.countUp(stepsEl, totalSteps, { group: true });
+    else stepsEl.textContent = totalSteps.toLocaleString();
     const sub = document.getElementById('statStepsSub');
     if (sub && settings.dailyStepsGoal) {
       const pct = Math.min(100, Math.round(totalSteps/settings.dailyStepsGoal*100));

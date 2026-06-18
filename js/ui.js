@@ -53,17 +53,18 @@ const UI = (() => {
   }
 
   // ---- Number count-up (tabular stats feel alive) ----
-  function countUp(el, to, { duration = 900, decimals = 0, prefix = '', suffix = '' } = {}) {
+  function countUp(el, to, { duration = 900, decimals = 0, prefix = '', suffix = '', group = false } = {}) {
     if (!el) return;
     const target = Number(to) || 0;
-    if (reduceMotion) { el.textContent = `${prefix}${target.toFixed(decimals)}${suffix}`; return; }
+    const fmt = (v) => `${prefix}${group ? Math.round(v).toLocaleString() : v.toFixed(decimals)}${suffix}`;
+    if (reduceMotion) { el.textContent = fmt(target); el.dataset.countFrom = target; return; }
     const from = Number(el.dataset.countFrom ?? 0);
+    if (from === target) { el.textContent = fmt(target); return; }
     const start = performance.now();
     function frame(now) {
       const p = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
-      const val = from + (target - from) * eased;
-      el.textContent = `${prefix}${val.toFixed(decimals)}${suffix}`;
+      el.textContent = fmt(from + (target - from) * eased);
       if (p < 1) requestAnimationFrame(frame);
       else el.dataset.countFrom = target;
     }
