@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITR-3 Filing Report — Pramod Kumar — AY 2026-27</title>
+<style>
+  :root {
+    --bg: #f5f7fa; --card: #fff; --border: #e2e8f0;
+    --text: #1a202c; --muted: #718096; --accent: #2b6cb0;
+    --green: #276749; --green-bg: #f0fff4; --green-border: #9ae6b4;
+    --red: #9b2c2c; --red-bg: #fff5f5; --red-border: #feb2b2;
+    --yellow: #744210; --yellow-bg: #fffff0; --yellow-border: #faf089;
+    --blue-bg: #ebf8ff; --blue-border: #90cdf4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a202c; --card: #2d3748; --border: #4a5568;
+      --text: #e2e8f0; --muted: #a0aec0; --accent: #63b3ed;
+      --green: #9ae6b4; --green-bg: #1c4532; --green-border: #276749;
+      --red: #feb2b2; --red-bg: #3b1919; --red-border: #9b2c2c;
+      --yellow: #faf089; --yellow-bg: #2d3018; --yellow-border: #744210;
+      --blue-bg: #1a365d; --blue-border: #2b6cb0;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f7fa; --card: #fff; --border: #e2e8f0;
+    --text: #1a202c; --muted: #718096; --accent: #2b6cb0;
+    --green: #276749; --green-bg: #f0fff4; --green-border: #9ae6b4;
+    --red: #9b2c2c; --red-bg: #fff5f5; --red-border: #feb2b2;
+    --yellow: #744210; --yellow-bg: #fffff0; --yellow-border: #faf089;
+    --blue-bg: #ebf8ff; --blue-border: #90cdf4;
+  }
+  :root[data-theme="dark"] {
+    --bg: #1a202c; --card: #2d3748; --border: #4a5568;
+    --text: #e2e8f0; --muted: #a0aec0; --accent: #63b3ed;
+    --green: #9ae6b4; --green-bg: #1c4532; --green-border: #276749;
+    --red: #feb2b2; --red-bg: #3b1919; --red-border: #9b2c2c;
+    --yellow: #faf089; --yellow-bg: #2d3018; --yellow-border: #744210;
+    --blue-bg: #1a365d; --blue-border: #2b6cb0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+  .container { max-width: 900px; margin: 0 auto; padding: 20px 16px; }
+  h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+  h2 { font-size: 1.15rem; font-weight: 600; margin: 0 0 12px; color: var(--accent); }
+  h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+  .badge-green { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-red { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-blue { background: var(--blue-bg); color: var(--accent); border: 1px solid var(--blue-border); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 18px; }
+  .header-card { background: linear-gradient(135deg, #2b6cb0, #2c5282); color: white; border-radius: 10px; padding: 22px 20px; margin-bottom: 18px; }
+  .header-card h1 { color: white; }
+  .header-card .meta { opacity: 0.85; font-size: 0.9rem; margin-top: 6px; }
+  .alert { border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; border-left: 4px solid; }
+  .alert-red { background: var(--red-bg); border-color: #e53e3e; color: var(--red); }
+  .alert-green { background: var(--green-bg); border-color: #38a169; color: var(--green); }
+  .alert-yellow { background: var(--yellow-bg); border-color: #d69e2e; color: var(--yellow); }
+  .alert-blue { background: var(--blue-bg); border-color: #3182ce; color: var(--accent); }
+  .alert strong { display: block; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { background: var(--bg); color: var(--muted); font-weight: 600; text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .total-row td { font-weight: 700; border-top: 2px solid var(--border); background: var(--bg); }
+  .step { display: flex; gap: 14px; margin-bottom: 20px; }
+  .step-num { flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+  .step-content { flex: 1; }
+  .step-content h3 { margin-bottom: 4px; }
+  .step-content p { color: var(--muted); font-size: 0.9rem; }
+  .step-content ul { margin-top: 6px; padding-left: 18px; color: var(--muted); font-size: 0.9rem; }
+  .step-content ul li { margin-bottom: 4px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; background: var(--blue-bg); color: var(--accent); border: 1px solid var(--blue-border); margin-right: 4px; }
+  .pill-red { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+  .pill-green { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .disclaimer { font-size: 0.8rem; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 20px; }
+  .verified-stamp { font-size: 0.78rem; color: var(--muted); margin-top: 8px; }
+  @media (max-width: 600px) {
+    .step { flex-direction: column; }
+    .step-num { width: 28px; height: 28px; font-size: 0.8rem; }
+    h1 { font-size: 1.3rem; }
+    td, th { padding: 6px 8px; }
+  }
+  .overflow-x { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header-card">
+    <h1>ITR-3 Filing Report</h1>
+    <div class="meta">
+      <strong>Pramod Kumar</strong> &nbsp;|&nbsp; PAN: CJRPK7549A &nbsp;|&nbsp;
+      Assessment Year: 2026-27 (FY 2025-26) &nbsp;|&nbsp;
+      Report Generated: 6 July 2026
+    </div>
+    <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+      <span class="badge badge-green">Form: ITR-3</span>
+      <span class="badge badge-green">Regime: New Tax Regime</span>
+      <span class="badge badge-green">Tax Payable: ₹0</span>
+      <span class="badge badge-blue">Refund: ₹14.78</span>
+    </div>
+  </div>
+
+  <!-- Deadline Alert -->
+  <div class="alert alert-red">
+    <strong>⏰ Filing Deadline: 31 July 2026 — 25 days remaining</strong>
+    You MUST file before this date to carry forward capital losses of ₹1,21,658. Missing the deadline means losing these losses forever — they cannot be used to offset future gains.
+  </div>
+
+  <!-- Section 1: Summary -->
+  <div class="card">
+    <h2>1. Filing Summary</h2>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Item</th><th>Details</th></tr>
+      <tr><td>Assessee Name</td><td><strong>Pramod Kumar</strong></td></tr>
+      <tr><td>PAN</td><td>CJRPK7549A</td></tr>
+      <tr><td>Address</td><td>H No 16, Satisthan, Shivaji Nagar, Masaurhi, Patna, Bihar – 804452</td></tr>
+      <tr><td>Assessment Year</td><td>AY 2026-27 (Income earned 1 Apr 2025 – 31 Mar 2026)</td></tr>
+      <tr><td>Residential Status</td><td>Resident &amp; Ordinarily Resident (ROR)</td></tr>
+      <tr><td>Form to File</td><td><strong>ITR-3</strong> — Required because of intraday (speculative business) income across 3 brokers</td></tr>
+      <tr><td>Tax Regime</td><td><strong>New Tax Regime</strong> (Section 115BAC)</td></tr>
+      <tr><td>Brokers</td><td>Zerodha (WX4741), Groww (3353187656), Angel One (P56512931)</td></tr>
+      <tr><td>Bank for Refund</td><td>SBI — Account ending ...0537</td></tr>
+    </table>
+    </div>
+    <p class="verified-stamp">📋 Tax figures web-verified via incometax.gov.in AIS download dated 06/07/2026 and TRACES 26AS dated 06/07/2026.</p>
+  </div>
+
+  <!-- Section 2: Income -->
+  <div class="card">
+    <h2>2. Income Computation</h2>
+
+    <h3>A. Speculative Business Income (Intraday Trading)</h3>
+    <p style="color:var(--muted); font-size:0.88rem; margin-bottom:10px;">Intraday equity trading is treated as <em>Speculative Business Income</em> under Section 43(5). Report this in Schedule BP → Speculative income.</p>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Broker</th><th class="num">Intraday P&amp;L (₹)</th></tr>
+      <tr><td>Zerodha (WX4741)</td><td class="num">21,166.81</td></tr>
+      <tr><td>Groww (3353187656)</td><td class="num">2,317.66</td></tr>
+      <tr><td>Angel One (P56512931)</td><td class="num">4,164.93</td></tr>
+      <tr class="total-row"><td>Total Speculative Business Income</td><td class="num">27,649.40</td></tr>
+    </table>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>B. Capital Gains — Short Term (STCG)</h3>
+    <p style="color:var(--muted); font-size:0.88rem; margin-bottom:10px;">Equity held &lt;12 months. Taxed at 20% on gains. Here the net result is a <strong>LOSS</strong> — no tax, and this loss is carried forward 8 years.</p>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Source</th><th class="num">STCG (₹)</th></tr>
+      <tr><td>Zerodha — Stocks</td><td class="num" style="color:var(--red);">−1,51,575.43</td></tr>
+      <tr><td>Groww — Stocks</td><td class="num">+68,781.45</td></tr>
+      <tr><td>Angel One — Stocks</td><td class="num">+33,782.30</td></tr>
+      <tr><td>Groww — Mutual Funds (Equity)</td><td class="num">+2,084.27</td></tr>
+      <tr><td>Zerodha — Non-Equity instruments</td><td class="num">+4,020.98</td></tr>
+      <tr class="total-row"><td>Net STCG</td><td class="num" style="color:var(--red);">−42,906.43 (LOSS)</td></tr>
+    </table>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>C. Capital Gains — Long Term (LTCG)</h3>
+    <p style="color:var(--muted); font-size:0.88rem; margin-bottom:10px;">Equity held ≥12 months. Taxed at 12.5% on gains above ₹1.25 lakh. Here also a <strong>LOSS</strong> — carried forward 8 years (only against future LTCG).</p>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Source</th><th class="num">LTCG (₹)</th></tr>
+      <tr><td>Zerodha — Stocks</td><td class="num" style="color:var(--red);">−93,024.55</td></tr>
+      <tr><td>Groww — Stocks</td><td class="num">+34,740.34</td></tr>
+      <tr><td>Angel One — Stocks</td><td class="num" style="color:var(--red);">−16,447.30</td></tr>
+      <tr><td>Groww — Mutual Funds</td><td class="num">0.00</td></tr>
+      <tr class="total-row"><td>Net LTCG</td><td class="num" style="color:var(--red);">−74,731.51 (LOSS)</td></tr>
+    </table>
+    </div>
+
+    <div class="divider"></div>
+
+    <h3>D. Income from Other Sources</h3>
+    <p style="color:var(--muted); font-size:0.88rem; margin-bottom:10px;">Interest and dividends are fully taxable at slab rate under new regime.</p>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Item</th><th>Source</th><th class="num">Amount (₹)</th></tr>
+      <tr><td>FD Interest — Suryoday Small Finance Bank</td><td>26AS Part-II / AIS</td><td class="num">14,033.00</td></tr>
+      <tr><td>Savings Interest — IDFC Bank (Acct ...4523)</td><td>AIS SFT-016</td><td class="num">2,313.00</td></tr>
+      <tr><td>Savings Interest — SBI (Acct ...0537)</td><td>AIS SFT-016</td><td class="num">3,050.00</td></tr>
+      <tr><td>Dividends — Companies (FY 2025-26 confirmed)</td><td>26AS / AIS TDS-194</td><td class="num">1,368.00</td></tr>
+      <tr><td>Dividends — Nippon India MF (194K)</td><td>26AS / AIS TDS-194K</td><td class="num">147.60</td></tr>
+      <tr class="total-row"><td colspan="2">Total Other Sources</td><td class="num">20,911.60</td></tr>
+    </table>
+    </div>
+    <div class="alert alert-yellow" style="margin-top:12px;">
+      <strong>⚠️ Dividend Note</strong>
+      Your AIS shows many SFT-015 dividends with "reported" dates in May–June 2026. These are likely for dividends paid <em>after</em> 31 March 2026 and belong to FY 2026-27 (next year's ITR). Only dividends whose payment date falls within 1 Apr 2025 – 31 Mar 2026 are included above. Verify each dividend date on the AIS before filing if you want to include/exclude carefully.
+    </div>
+  </div>
+
+  <!-- Section 3: Tax Computation -->
+  <div class="card">
+    <h2>3. Tax Computation — New Regime (AY 2026-27)</h2>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Income Head</th><th class="num">Amount (₹)</th></tr>
+      <tr><td>Speculative Business Income</td><td class="num">27,649.40</td></tr>
+      <tr><td>Short-Term Capital Gains</td><td class="num">0.00 (Net Loss — no tax)</td></tr>
+      <tr><td>Long-Term Capital Gains</td><td class="num">0.00 (Net Loss — no tax)</td></tr>
+      <tr><td>Income from Other Sources</td><td class="num">20,911.60</td></tr>
+      <tr class="total-row"><td>Gross Total Income</td><td class="num">48,561.00</td></tr>
+      <tr><td>Deductions (New Regime — None applicable)</td><td class="num">0.00</td></tr>
+      <tr class="total-row"><td>Total Taxable Income</td><td class="num">48,561.00</td></tr>
+    </table>
+    </div>
+    <div class="divider"></div>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Tax Calculation</th><th class="num">Amount (₹)</th></tr>
+      <tr><td>Income up to ₹4,00,000 (New Regime basic exemption)</td><td class="num">NIL</td></tr>
+      <tr><td>Total income of ₹48,561 — well below ₹4,00,000</td><td class="num"><strong>Tax = ₹0</strong></td></tr>
+      <tr><td>Health &amp; Education Cess @ 4%</td><td class="num">₹0</td></tr>
+      <tr><td>Section 87A Rebate (not needed — tax already ₹0)</td><td class="num">—</td></tr>
+      <tr class="total-row"><td>Total Tax Liability</td><td class="num">₹0</td></tr>
+      <tr><td>TDS Already Deducted (Nippon India MF — 194K)</td><td class="num">₹14.78</td></tr>
+      <tr class="total-row" style="color:var(--green);"><td><strong>REFUND Due to You</strong></td><td class="num"><strong>₹14.78</strong></td></tr>
+    </table>
+    </div>
+
+    <div class="alert alert-green" style="margin-top:14px;">
+      <strong>✅ Capital Losses Carried Forward</strong>
+      STCG Loss: ₹42,906 + LTCG Loss: ₹74,731 = <strong>₹1,17,637 total</strong> will be reported in Schedule CFL (Carry Forward of Losses). These reduce your tax bill in future years when you make gains.
+    </div>
+  </div>
+
+  <!-- Section 4: Portal Walkthrough -->
+  <div class="card">
+    <h2>4. Step-by-Step Portal Filing Guide</h2>
+    <p style="color:var(--muted); font-size:0.88rem; margin-bottom:18px;">Go to <strong>incometax.gov.in</strong> → Login with PAN + password. Follow each step below.</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>Pre-Filing Checklist</h3>
+        <ul>
+          <li>Aadhaar linked and verified with PAN ✓</li>
+          <li>SBI bank account pre-validated: go to <em>My Profile → Bank Account → Add/Validate</em></li>
+          <li>Download AIS and 26AS for your records (you already have both)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>Start Filing</h3>
+        <ul>
+          <li>Click: <strong>e-File → Income Tax Returns → File Income Tax Return</strong></li>
+          <li>Assessment Year: <strong>2026-27</strong></li>
+          <li>Mode: <strong>Online</strong></li>
+          <li>Filing Status: <strong>Individual</strong></li>
+          <li>ITR Form: <strong>ITR-3</strong></li>
+          <li>Reason: <strong>Taxable income above basic exemption limit</strong> (choose even if tax is ₹0)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>Part A — General Information</h3>
+        <ul>
+          <li>Name, PAN, DOB, Address — auto-filled from PAN, verify</li>
+          <li>Aadhaar Number — enter your 12-digit Aadhaar</li>
+          <li>Nature of Business: <strong>No account case (no books of accounts)</strong></li>
+          <li>Select: <strong>New Tax Regime u/s 115BAC(1A)</strong></li>
+          <li>Residential Status: <strong>Resident</strong></li>
+          <li>Bank Account: Select <strong>SBI ...0537</strong> → Mark as refund account</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>Schedule BP — Business &amp; Profession (Speculative)</h3>
+        <ul>
+          <li>Enter under <em>Income from Speculative Business</em></li>
+          <li>Gross Receipts (Total intraday sell value): Enter total from all 3 brokers</li>
+          <li>Net Speculative Income: <strong>₹27,649</strong></li>
+          <li>Note: Intraday loss cannot be set off against salary or other income — but you have no such income to worry about</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <h3>Schedule CG — Capital Gains</h3>
+        <p>This is the most detailed schedule. Enter trade-by-trade or use the summary method:</p>
+        <ul>
+          <li><span class="pill">STCG 111A</span> Listed equity / equity MF (short term, STT paid): Net = <strong style="color:var(--red);">−₹42,906</strong> (loss)</li>
+          <li><span class="pill">LTCG 112A</span> Listed equity / equity MF (long term, STT paid): Net = <strong style="color:var(--red);">−₹74,731</strong> (loss)</li>
+          <li>Enter each broker's figures separately and let the portal sum them</li>
+          <li>Zerodha: Enter from taxpnl report | Groww: Enter from capital gains statement | Angel One: Enter from P&amp;L summary</li>
+          <li>LTCG exemption (₹1.25 lakh): Not applicable — you have a loss, not a gain</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-content">
+        <h3>Schedule OS — Other Sources</h3>
+        <ul>
+          <li>Interest from Savings Bank (Section 80TTA — no deduction under new regime but still report):
+            <ul>
+              <li>IDFC Bank savings: ₹2,313</li>
+              <li>SBI savings: ₹3,050</li>
+            </ul>
+          </li>
+          <li>Interest from FD/Deposits: <strong>₹14,033</strong> (Suryoday SFB)</li>
+          <li>Dividends: <strong>₹1,515.60</strong> (₹1,368 company dividends + ₹147.60 MF dividend)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">7</div>
+      <div class="step-content">
+        <h3>Schedule CFL — Carry Forward of Losses</h3>
+        <ul>
+          <li>This schedule auto-populates from Schedule CG if entered correctly</li>
+          <li>Verify it shows:
+            <ul>
+              <li>STCG Loss (111A): ₹42,906 → Carry forward AY 2027-28 to AY 2034-35</li>
+              <li>LTCG Loss (112A): ₹74,731 → Carry forward AY 2027-28 to AY 2034-35</li>
+            </ul>
+          </li>
+          <li><strong>This is why you MUST file on time.</strong> Without this schedule being filed before 31 July, these losses are lost forever.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">8</div>
+      <div class="step-content">
+        <h3>Schedule TDS — Tax Deducted at Source</h3>
+        <ul>
+          <li>This auto-populates from 26AS. Verify the following appears:
+            <ul>
+              <li>Nippon India Mutual Fund (TAN: MUMR14567A) — Section 194K — TDS: <strong>₹14.78</strong></li>
+            </ul>
+          </li>
+          <li>All other entries should show ₹0 TDS (no TDS was deducted)</li>
+          <li>Claim all ₹14.78 as credit → this becomes your refund</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">9</div>
+      <div class="step-content">
+        <h3>Tax Summary Page</h3>
+        <ul>
+          <li>Total Income: ~₹48,561</li>
+          <li>Tax Payable: <strong>₹0</strong></li>
+          <li>TDS Credit: ₹14.78</li>
+          <li>Refund: <strong>₹14.78</strong> (to SBI ...0537)</li>
+          <li>Self-Assessment Tax to pay: <strong>₹0</strong> (nothing to pay)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">10</div>
+      <div class="step-content">
+        <h3>Preview, Validate &amp; Submit</h3>
+        <ul>
+          <li>Click <em>Preview Return</em> → review all figures once</li>
+          <li>Click <em>Validate</em> — fix any errors flagged</li>
+          <li>Click <em>Submit</em></li>
+          <li>Download the ITR-V (acknowledgement) PDF immediately</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">11</div>
+      <div class="step-content">
+        <h3>⚡ E-Verify — Do This Immediately (Within 30 Days)</h3>
+        <p style="color:var(--red); font-weight:600; margin-bottom:6px;">An un-e-verified return is treated as if never filed. E-verify the same day you submit.</p>
+        <ul>
+          <li><strong>Easiest method</strong>: Aadhaar OTP — click "e-Verify via Aadhaar OTP" → OTP sent to Aadhaar-linked mobile → enter OTP</li>
+          <li>Alternative: Net banking EVC, or DEMAT account EVC</li>
+          <li>After e-verification, you'll get a confirmation email/SMS</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Document Checklist -->
+  <div class="card">
+    <h2>5. Documents Used (Keep for 7 Years)</h2>
+    <div class="overflow-x">
+    <table>
+      <tr><th>Document</th><th>Status</th><th>Key Figure Used</th></tr>
+      <tr><td>26AS (TRACES) — AY 2026-27</td><td><span class="badge badge-green">✓ Verified</span></td><td>TDS ₹14.78 (Nippon MF)</td></tr>
+      <tr><td>AIS — FY 2025-26 (downloaded 06/07/2026)</td><td><span class="badge badge-green">✓ Verified</span></td><td>Dividends, interest, share sale data</td></tr>
+      <tr><td>Zerodha Tax P&amp;L (WX4741) FY 2025-26</td><td><span class="badge badge-green">✓ Verified</span></td><td>Intraday ₹21,167, STCG −₹1,51,575, LTCG −₹93,025</td></tr>
+      <tr><td>Groww Stocks CG Report (3353187656) FY 2025-26</td><td><span class="badge badge-green">✓ Verified</span></td><td>STCG ₹68,781, LTCG ₹34,740, Dividends ₹2,958</td></tr>
+      <tr><td>Groww MF Capital Gains FY 2025-26</td><td><span class="badge badge-green">✓ Verified</span></td><td>Equity STCG ₹2,084</td></tr>
+      <tr><td>Angel One P&amp;L (P56512931) FY 2025-26</td><td><span class="badge badge-green">✓ Verified</span></td><td>Intraday ₹4,165, STCG ₹33,782, LTCG −₹16,447</td></tr>
+      <tr><td>Suryoday SFB — FD Interest Certificate</td><td><span class="badge badge-red">Recommended</span></td><td>₹14,033 interest (confirmed via 26AS)</td></tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- Section 6: Post Filing -->
+  <div class="card">
+    <h2>6. After Filing</h2>
+    <ul style="padding-left:20px; line-height:2;">
+      <li>Refund of ₹14.78 will be credited to your SBI account within 3–6 weeks</li>
+      <li>Intimation u/s 143(1) will arrive at your registered email — read it carefully</li>
+      <li>Track refund at: <em>incometax.gov.in → e-File → Income Tax Returns → View Filed Returns</em></li>
+      <li>If a notice arrives, don't panic — respond via the portal's "e-Proceedings" tab</li>
+      <li><strong>Next year (AY 2027-28)</strong>: Your ₹1,17,637 capital losses can reduce tax on gains — keep this report</li>
+    </ul>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="disclaimer">
+    <strong>Important Disclaimer</strong><br><br>
+    This report is prepared based on documents provided by you (26AS, AIS, broker P&amp;L statements from Zerodha, Groww, and Angel One). All figures are sourced directly from those documents — nothing has been estimated or fabricated.<br><br>
+    <strong>This report is a guide, not a legal document. You are solely responsible for submitting and e-verifying your return on incometax.gov.in.</strong> This tool does not file on your behalf and is not a substitute for a Chartered Accountant. For complex tax situations, consult a CA.<br><br>
+    Tax rules change every Budget. Key rates used: New Regime slabs (AY 2026-27), STCG u/s 111A @ 20%, LTCG u/s 112A @ 12.5% with ₹1.25L exemption. Web-verified 06/07/2026.
+  </div>
+
+</div>
+</body>
+</html>
