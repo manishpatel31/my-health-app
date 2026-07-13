@@ -1,0 +1,1311 @@
+<title>ITR Filing Copilot — Step-by-Step Guide</title>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --ground:#f2f4f1;
+  --paper:#ffffff;
+  --paper-2:#eaeee8;
+  --ink:#16324a;
+  --ink-2:#3d5a75;
+  --ink-3:#6b8299;
+  --line:#d5dcd6;
+  --accent:#0e7a5f;
+  --accent-soft:#e2f0ea;
+  --warn:#b7791f;
+  --warn-soft:#f6ecd9;
+  --danger:#b3402e;
+  --danger-soft:#f7e4df;
+  --info-soft:#e3ecf4;
+  --code-bg:#eef1ee;
+  --shadow:0 1px 3px rgba(22,50,74,.08),0 4px 14px rgba(22,50,74,.06);
+  --radius:10px;
+  --serif:Georgia,'Times New Roman',Times,serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --mono:ui-monospace,'SF Mono','Cascadia Mono','Segoe UI Mono',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --ground:#101a22;
+    --paper:#18242e;
+    --paper-2:#1e2c38;
+    --ink:#dce6ec;
+    --ink-2:#a8bcc9;
+    --ink-3:#7e93a3;
+    --line:#2c3d4a;
+    --accent:#3fae8c;
+    --accent-soft:#173229;
+    --warn:#d9a04a;
+    --warn-soft:#332a17;
+    --danger:#d96b57;
+    --danger-soft:#3a211c;
+    --info-soft:#1d2f3e;
+    --code-bg:#141f28;
+    --shadow:0 1px 3px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#101a22;
+  --paper:#18242e;
+  --paper-2:#1e2c38;
+  --ink:#dce6ec;
+  --ink-2:#a8bcc9;
+  --ink-3:#7e93a3;
+  --line:#2c3d4a;
+  --accent:#3fae8c;
+  --accent-soft:#173229;
+  --warn:#d9a04a;
+  --warn-soft:#332a17;
+  --danger:#d96b57;
+  --danger-soft:#3a211c;
+  --info-soft:#1d2f3e;
+  --code-bg:#141f28;
+  --shadow:0 1px 3px rgba(0,0,0,.35),0 4px 14px rgba(0,0,0,.25);
+}
+:root[data-theme="light"]{
+  --ground:#f2f4f1;
+  --paper:#ffffff;
+  --paper-2:#eaeee8;
+  --ink:#16324a;
+  --ink-2:#3d5a75;
+  --ink-3:#6b8299;
+  --line:#d5dcd6;
+  --accent:#0e7a5f;
+  --accent-soft:#e2f0ea;
+  --warn:#b7791f;
+  --warn-soft:#f6ecd9;
+  --danger:#b3402e;
+  --danger-soft:#f7e4df;
+  --info-soft:#e3ecf4;
+  --code-bg:#eef1ee;
+  --shadow:0 1px 3px rgba(22,50,74,.08),0 4px 14px rgba(22,50,74,.06);
+}
+
+/* ============ BASE ============ */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15.5px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.25;text-wrap:balance;margin:0}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.92em}
+code{background:var(--code-bg);border:1px solid var(--line);border-radius:4px;padding:1px 6px;white-space:nowrap}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=number],input[type=text],select{
+  background:var(--paper);color:var(--ink);
+  border:1px solid var(--line);border-radius:6px;
+  padding:7px 10px;font-size:15px;font-family:var(--mono);
+}
+input[type=number]{text-align:right}
+input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);flex:none;margin-top:3px}
+
+/* ============ LAYOUT ============ */
+.app{display:flex;min-height:100vh}
+nav.side{
+  width:248px;flex:none;
+  background:var(--paper);
+  border-right:1px solid var(--line);
+  padding:20px 0 30px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+}
+.brand{padding:0 20px 16px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.brand h1{font-size:19px;letter-spacing:.01em}
+.brand .sub{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.09em;margin-top:3px}
+.navlink{
+  display:flex;align-items:center;gap:10px;
+  width:100%;text-align:left;
+  background:none;border:none;color:var(--ink-2);
+  padding:9px 20px;font-size:14px;border-left:3px solid transparent;
+}
+.navlink:hover{background:var(--paper-2);color:var(--ink)}
+.navlink.active{border-left-color:var(--accent);color:var(--ink);background:var(--accent-soft);font-weight:600}
+.navlink .nlnum{
+  font-family:var(--mono);font-size:11px;color:var(--ink-3);
+  width:20px;flex:none;
+}
+.navlink.active .nlnum{color:var(--accent)}
+.nav-progress{padding:16px 20px 0;font-size:12px;color:var(--ink-3)}
+.nav-progress .bar{height:6px;background:var(--paper-2);border-radius:3px;overflow:hidden;margin-top:6px;border:1px solid var(--line)}
+.nav-progress .fill{height:100%;background:var(--accent);width:0%;transition:width .3s}
+@media (prefers-reduced-motion:reduce){
+  .nav-progress .fill{transition:none}
+  *{transition:none!important;animation:none!important}
+}
+
+main{flex:1;min-width:0;padding:34px 40px 90px}
+.section{display:none;max-width:860px;margin:0 auto}
+.section.visible{display:block}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:700;font-family:var(--sans)}
+.section>h2{font-size:30px;margin:6px 0 4px}
+.lede{color:var(--ink-2);font-size:16.5px;max-width:64ch;margin:8px 0 26px}
+
+/* mobile */
+.topbar{display:none}
+@media (max-width:840px){
+  .app{flex-direction:column}
+  nav.side{position:static;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line);padding:12px 0}
+  .brand{padding:4px 16px 10px}
+  .navwrap{display:flex;overflow-x:auto;gap:2px;padding:0 10px}
+  .navlink{flex:none;border-left:none;border-bottom:3px solid transparent;padding:8px 12px;border-radius:6px 6px 0 0}
+  .navlink.active{border-left:none;border-bottom-color:var(--accent)}
+  .nav-progress{display:none}
+  main{padding:24px 16px 70px}
+}
+
+/* ============ COMPONENTS ============ */
+.card{
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:20px 22px;margin:0 0 18px;
+}
+.card h3{font-size:19px;margin-bottom:10px}
+.card h4{font-size:16px;margin:14px 0 6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:700px){.grid2{grid-template-columns:1fr}}
+
+.callout{
+  border-radius:8px;padding:13px 16px;margin:12px 0;
+  font-size:14.5px;border:1px solid var(--line);
+  display:flex;gap:10px;align-items:flex-start;
+}
+.callout .ic{flex:none;font-weight:800;font-family:var(--mono);font-size:13px;margin-top:1px}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn)}
+.callout.warn .ic{color:var(--warn)}
+.callout.danger{background:var(--danger-soft);border-color:var(--danger)}
+.callout.danger .ic{color:var(--danger)}
+.callout.ok{background:var(--accent-soft);border-color:var(--accent)}
+.callout.ok .ic{color:var(--accent)}
+.callout.info{background:var(--info-soft)}
+.callout.info .ic{color:var(--ink-2)}
+
+table{border-collapse:collapse;width:100%;font-size:14px}
+.tablewrap{overflow-x:auto;margin:10px 0}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--paper-2);font-weight:650;font-size:13px}
+td .num,th .num{white-space:nowrap}
+
+.pill{
+  display:inline-block;font-size:11px;font-weight:700;
+  padding:2px 9px;border-radius:20px;letter-spacing:.05em;
+  text-transform:uppercase;font-family:var(--sans);white-space:nowrap;
+}
+.pill.block{background:var(--danger-soft);color:var(--danger);border:1px solid var(--danger)}
+.pill.soft{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn)}
+.pill.okp{background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+
+/* checklist */
+.ckitem{display:flex;gap:11px;padding:9px 4px;border-bottom:1px dashed var(--line);align-items:flex-start}
+.ckitem:last-child{border-bottom:none}
+.ckitem label{cursor:pointer;flex:1}
+.ckitem .ckdesc{font-size:13px;color:var(--ink-3);display:block}
+.ckitem.done label{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:1.5px}
+.ckitem.done .ckdesc{text-decoration:none}
+
+/* steps / accordion */
+.step{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+  margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;
+}
+.step-head{
+  display:flex;align-items:center;gap:13px;width:100%;
+  background:none;border:none;text-align:left;
+  padding:15px 18px;color:var(--ink);
+}
+.step-head:hover{background:var(--paper-2)}
+.step-num{
+  font-family:var(--mono);font-size:12.5px;font-weight:700;
+  color:var(--accent);border:1.5px solid var(--accent);
+  border-radius:6px;padding:3px 8px;flex:none;background:var(--accent-soft);
+}
+.step.done .step-num{background:var(--accent);color:var(--paper)}
+.step-title{font-weight:650;font-size:15.5px;flex:1;font-family:var(--sans)}
+.step-sub{font-size:12.5px;color:var(--ink-3);font-weight:400;display:block}
+.step-caret{color:var(--ink-3);flex:none;transition:transform .2s;font-size:12px}
+.step.open .step-caret{transform:rotate(90deg)}
+.step-body{display:none;padding:4px 20px 18px;border-top:1px solid var(--line);font-size:14.5px}
+.step.open .step-body{display:block}
+.step-body h5{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);margin:16px 0 6px;font-family:var(--sans)}
+.step-body ul,.step-body ol{margin:6px 0;padding-left:22px}
+.step-body li{margin:4px 0}
+.step-done-row{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);font-size:14px}
+.step-done-row label{cursor:pointer;font-weight:600;color:var(--accent)}
+
+/* progress bar over walkthrough */
+.walkbar{position:sticky;top:0;z-index:5;background:var(--ground);padding:10px 0 12px;margin-bottom:8px}
+.walkbar .meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink-3);margin-bottom:5px}
+.walkbar .bar{height:8px;background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.walkbar .fill{height:100%;background:var(--accent);width:0%;transition:width .3s}
+
+/* stamp */
+.stamp{
+  display:none;margin:20px auto 0;width:fit-content;
+  border:3px double var(--accent);color:var(--accent);
+  font-family:var(--mono);font-weight:800;font-size:20px;letter-spacing:.2em;
+  padding:10px 26px;border-radius:8px;transform:rotate(-4deg);
+  text-transform:uppercase;
+}
+.stamp.show{display:block}
+
+/* quiz */
+.quizq{font-size:17px;font-weight:600;margin:4px 0 14px;font-family:var(--serif)}
+.quizopts{display:flex;flex-direction:column;gap:9px}
+.quizbtn{
+  background:var(--paper-2);border:1px solid var(--line);border-radius:8px;
+  padding:11px 15px;text-align:left;font-size:15px;color:var(--ink);
+}
+.quizbtn:hover{border-color:var(--accent);background:var(--accent-soft)}
+.quizresult{margin-top:14px}
+.quizresult .formname{font-size:26px;font-family:var(--serif);color:var(--accent);font-weight:700}
+.linkbtn{background:none;border:none;color:var(--accent);text-decoration:underline;padding:0;font-size:14px}
+
+/* calculators */
+.calc{margin-top:6px}
+.calcrow{display:flex;gap:9px;align-items:center;margin:7px 0;flex-wrap:wrap}
+.calcrow label{flex:1;min-width:150px;font-size:14px}
+.calcrow input[type=number]{width:140px}
+.calcrow input[type=text]{width:160px;font-family:var(--sans)}
+.totalrow{
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:2px solid var(--ink);margin-top:12px;padding-top:9px;
+  font-weight:700;font-size:15.5px;
+}
+.totalrow .num{font-size:18px}
+.neg{color:var(--danger)}
+.pos{color:var(--accent)}
+.addrow,.rmrow{
+  background:var(--paper-2);border:1px solid var(--line);border-radius:6px;
+  padding:4px 12px;font-size:13px;color:var(--ink-2);
+}
+.addrow:hover{border-color:var(--accent);color:var(--accent)}
+.copybtn{
+  background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);
+  border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;margin-left:8px;
+}
+.copybtn:hover{background:var(--accent);color:var(--paper)}
+
+.cheat{border:2px solid var(--accent);}
+.cheat h3{color:var(--accent)}
+.cheat td:last-child{text-align:right}
+
+/* error fixer */
+.errsearch{width:100%;font-family:var(--sans);margin-bottom:14px;padding:10px 14px;font-size:15px}
+.errcard{border-left:4px solid var(--danger);margin-bottom:12px}
+.errcard.soft-b{border-left-color:var(--warn)}
+.errcard .errmsg{font-family:var(--mono);font-size:13px;background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:8px 12px;margin:8px 0;white-space:pre-wrap}
+.errcard h3{font-size:16px;font-family:var(--sans)}
+.hidden{display:none!important}
+
+kbd{
+  font-family:var(--mono);font-size:12px;background:var(--paper-2);
+  border:1px solid var(--line);border-bottom-width:2.5px;border-radius:5px;padding:1px 7px;white-space:nowrap;
+}
+.pathchain{font-size:13.5px;color:var(--ink-2);font-family:var(--sans)}
+.pathchain b{color:var(--ink)}
+
+.footer-note{max-width:860px;margin:40px auto 0;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:14px}
+.resetbtn{background:none;border:1px solid var(--line);color:var(--ink-3);border-radius:6px;padding:5px 12px;font-size:12.5px}
+.resetbtn:hover{border-color:var(--danger);color:var(--danger)}
+</style>
+
+<div class="app">
+<nav class="side">
+  <div class="brand">
+    <h1>ITR Filing Copilot</h1>
+    <div class="sub">AY 2026-27 · incometax.gov.in</div>
+  </div>
+  <div class="navwrap" id="navwrap">
+    <button class="navlink active" data-sec="start"><span class="nlnum">01</span>Start here</button>
+    <button class="navlink" data-sec="docs"><span class="nlnum">02</span>Documents</button>
+    <button class="navlink" data-sec="form"><span class="nlnum">03</span>Pick the form</button>
+    <button class="navlink" data-sec="rules"><span class="nlnum">04</span>Rules &amp; regime</button>
+    <button class="navlink" data-sec="prep"><span class="nlnum">05</span>Prep worksheet</button>
+    <button class="navlink" data-sec="walk"><span class="nlnum">06</span>Portal walkthrough</button>
+    <button class="navlink" data-sec="errors"><span class="nlnum">07</span>Error fixer</button>
+    <button class="navlink" data-sec="verify"><span class="nlnum">08</span>Submit &amp; e-verify</button>
+    <button class="navlink" data-sec="after"><span class="nlnum">09</span>After filing</button>
+  </div>
+  <div class="nav-progress">
+    <span id="navprogtext">Walkthrough: 0 / 16 steps</span>
+    <div class="bar"><div class="fill" id="navprogfill"></div></div>
+  </div>
+</nav>
+
+<main>
+
+<!-- ================== 01 START ================== -->
+<section class="section visible" id="sec-start">
+  <div class="eyebrow">01 · Orientation</div>
+  <h2>Start here</h2>
+  <p class="lede">This app captures every screen, trap, and fix from a real ITR-3 filing on the e-Filing portal — so you can guide anyone through their return without remembering a thing. Work left to right through the sections; your ticks and numbers are saved in this browser automatically.</p>
+
+  <div class="card">
+    <h3>The whole journey at a glance</h3>
+    <ol>
+      <li><b>Collect documents</b> — AIS, Form 26AS, broker P&amp;L reports, bank interest figures. <button class="linkbtn" data-goto="docs">Checklist →</button></li>
+      <li><b>Pick the right ITR form</b> — one wrong answer here means starting over. <button class="linkbtn" data-goto="form">Decision quiz →</button></li>
+      <li><b>Compute the numbers offline first</b> — never derive figures inside the portal. <button class="linkbtn" data-goto="prep">Worksheet →</button></li>
+      <li><b>File on the portal</b> — schedule by schedule, in the right order. <button class="linkbtn" data-goto="walk">Walkthrough →</button></li>
+      <li><b>Fix validation errors</b> — they will appear; all the known ones are catalogued. <button class="linkbtn" data-goto="errors">Error fixer →</button></li>
+      <li><b>Submit and e-verify</b> — unverified returns are treated as never filed. <button class="linkbtn" data-goto="verify">Final steps →</button></li>
+    </ol>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Get the year right</h3>
+      <p style="font-size:14.5px">You always file for the year that just <em>ended</em>:</p>
+      <div class="tablewrap"><table>
+        <tr><th>Money earned during</th><td>FY 2025-26 <span class="num">(1 Apr 2025 – 31 Mar 2026)</span></td></tr>
+        <tr><th>You file under</th><td><b>AY 2026-27</b></td></tr>
+        <tr><th>Due date (no audit)</th><td>Whatever the portal's dropdown offers as the non-audit date — in 2026 it was <b>31 August 2026</b> (extended from 31 July)</td></tr>
+        <tr><th>Belated deadline</th><td class="num">31 December 2026 (with late fee, and you lose loss carry-forward)</td></tr>
+      </table></div>
+    </div>
+    <div class="card">
+      <h3>Non-negotiables</h3>
+      <ul style="font-size:14.5px;padding-left:20px;margin:6px 0">
+        <li>PAN must be linked to Aadhaar; the Aadhaar-linked <b>mobile must be reachable</b> for the final OTP.</li>
+        <li>At least one bank account must be <b>pre-validated</b> on the portal for the refund.</li>
+        <li>File <b>by the due date</b> if there are capital losses — a late return forfeits the right to carry losses forward.</li>
+        <li>A submitted return <b>cannot be edited</b>. Only a fresh Revised Return u/s 139(5) can replace it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout ok"><span class="ic">✓</span><div>Everything in this guide comes from an actual successful AY 2026-27 ITR-3 filing (intraday trading + capital losses + interest + dividends, new regime, refund issued). The example amounts you'll see are from that return.</div></div>
+</section>
+
+<!-- ================== 02 DOCS ================== -->
+<section class="section" id="sec-docs">
+  <div class="eyebrow">02 · Before you open the portal</div>
+  <h2>Document checklist</h2>
+  <p class="lede">Gather everything first. Half the filing pain comes from hunting for a number with the portal session timing out in the background. Tick items off as you collect them.</p>
+
+  <div class="card">
+    <h3>Identity &amp; access</h3>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-pan" id="doc-pan"><label for="doc-pan">PAN of the person you're filing for<span class="ckdesc">This is their portal user ID. Confirm PAN–Aadhaar linkage is active.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-pass" id="doc-pass"><label for="doc-pass">Portal password (or ability to reset via Aadhaar OTP)<span class="ckdesc">incometax.gov.in → Login. Reset needs the Aadhaar-linked mobile.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-mob" id="doc-mob"><label for="doc-mob">Access to the Aadhaar-linked mobile number<span class="ckdesc">Needed twice: possibly at login, and definitely for e-verification OTP at the very end. If unavailable on filing day, you can still submit and e-verify within 30 days.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-bank" id="doc-bank"><label for="doc-bank">Bank account number + IFSC of a pre-validated account<span class="ckdesc">Refunds go only to a pre-validated account. Check under Profile → My Bank Account.</span></label></div>
+  </div>
+
+  <div class="card">
+    <h3>Income evidence</h3>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-ais" id="doc-ais"><label for="doc-ais">AIS (Annual Information Statement) — download the PDF<span class="ckdesc">Portal → e-File → Income Tax Returns → View AIS. This is your master cross-check for interest, dividends, share sales, and TDS.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-26as" id="doc-26as"><label for="doc-26as">Form 26AS<span class="ckdesc">e-File → Income Tax Returns → View Form 26AS. Gives TAN + exact TDS amounts per deductor — you'll need the TAN in Schedule TDS.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-pnl" id="doc-pnl"><label for="doc-pnl">Tax P&amp;L report from every broker used<span class="ckdesc">Zerodha: Console → Reports → Tax P&amp;L. Groww: separate reports for stocks and mutual funds. Angel One: Reports → P&amp;L. Get the full FY (Q1–Q4). Each report splits intraday / short-term / long-term.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-int" id="doc-int"><label for="doc-int">Interest figures for every bank account and FD<span class="ckdesc">The AIS usually has these (SFT + TDS sections). Note savings interest and FD interest separately — the portal wants them in different rows.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-f16" id="doc-f16"><label for="doc-f16">Form 16 (only if salaried)<span class="ckdesc">From the employer. Skip if there's no salary income.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="doc-prev" id="doc-prev"><label for="doc-prev">Last year's ITR acknowledgement (if any)<span class="ckdesc">Needed only if there are brought-forward losses or you must answer questions about earlier filings (e.g. Form 10IEA history).</span></label></div>
+  </div>
+
+  <div class="callout warn"><span class="ic">!</span><div><b>Trust the AIS, verify with brokers.</b> In the real filing, the AIS interest entries were the ground truth (6 banks: savings + FD interest = ₹56,177), while dividend TDS revealed a deductor (a mutual fund AMC) the taxpayer had forgotten about. Read every AIS section once before starting.</div></div>
+</section>
+
+<!-- ================== 03 FORM PICKER ================== -->
+<section class="section" id="sec-form">
+  <div class="eyebrow">03 · Decision</div>
+  <h2>Which ITR form?</h2>
+  <p class="lede">Answer the questions and the right form falls out. The single most common mistake: not realising that <b>intraday equity trading is "speculative business income"</b>, which forces ITR-3 even for tiny amounts.</p>
+
+  <div class="card" id="quizcard">
+    <div id="quizbox"></div>
+  </div>
+
+  <div class="card">
+    <h3>Reference: the four individual forms</h3>
+    <div class="tablewrap"><table>
+      <tr><th>Form</th><th>Who it fits</th><th>Rules out</th></tr>
+      <tr><td><b>ITR-1</b> (Sahaj)</td><td>Salary/pension + one house property + interest/dividends, total income ≤ ₹50 lakh. (Small 112A LTCG within the exempt limit is now tolerated.)</td><td>Any business income, capital losses to carry forward, more than one house, foreign assets, director/unlisted shares</td></tr>
+      <tr><td><b>ITR-2</b></td><td>Everything in ITR-1 plus capital gains/losses, multiple houses, foreign assets, &gt;₹50 lakh income</td><td>Any business or professional income — including intraday and F&amp;O</td></tr>
+      <tr><td><b>ITR-3</b></td><td>Anyone with business/professional income: <b>intraday trading, F&amp;O</b>, freelancing with real books, plus all ITR-2 items</td><td>— (it's the widest form)</td></tr>
+      <tr><td><b>ITR-4</b> (Sugam)</td><td>Presumptive business/profession (44AD/44ADA/44AE) ≤ ₹50 lakh income, resident</td><td>Capital gains beyond small exempt LTCG, loss carry-forward, intraday trading</td></tr>
+    </table></div>
+    <div class="callout info"><span class="ic">i</span><div><b>Why intraday ≠ capital gains:</b> Section 43(5) defines a trade settled without delivery as a <em>speculative transaction</em>. Intraday equity is exactly that, so its profit is business income, not capital gains — and business income means ITR-3 (or ITR-4 presumptive, but speculative income isn't eligible for presumptive treatment). Delivery-based selling stays capital gains even in the same account.</div></div>
+  </div>
+</section>
+
+<!-- ================== 04 RULES ================== -->
+<section class="section" id="sec-rules">
+  <div class="eyebrow">04 · Ground rules</div>
+  <h2>Regime, rates &amp; loss rules</h2>
+  <p class="lede">Five minutes here prevents the worst mistakes: wrong regime answers, wrong due date, and losses silently lost forever.</p>
+
+  <div class="card">
+    <h3>New regime is the default (section 115BAC)</h3>
+    <p style="font-size:14.5px">Slabs for FY 2025-26 (AY 2026-27), normal income:</p>
+    <div class="tablewrap"><table>
+      <tr><th>Slab</th><th>Rate</th></tr>
+      <tr><td class="num">Up to ₹4,00,000</td><td>Nil</td></tr>
+      <tr><td class="num">₹4,00,001 – ₹8,00,000</td><td class="num">5%</td></tr>
+      <tr><td class="num">₹8,00,001 – ₹12,00,000</td><td class="num">10%</td></tr>
+      <tr><td class="num">₹12,00,001 – ₹16,00,000</td><td class="num">15%</td></tr>
+      <tr><td class="num">₹16,00,001 – ₹20,00,000</td><td class="num">20%</td></tr>
+      <tr><td class="num">₹20,00,001 – ₹24,00,000</td><td class="num">25%</td></tr>
+      <tr><td class="num">Above ₹24,00,000</td><td class="num">30%</td></tr>
+    </table></div>
+    <ul style="font-size:14.5px;padding-left:20px">
+      <li><b>Rebate u/s 87A:</b> resident with total income ≤ ₹12 lakh pays zero tax on normal income (rebate up to ₹60,000, with marginal relief just above). The rebate does <b>not</b> apply against 112A LTCG.</li>
+      <li>Standard deduction ₹75,000 against salary. Almost no other deductions (no 80C/80D/HRA).</li>
+      <li>Health &amp; education cess 4% on the tax.</li>
+    </ul>
+    <div class="callout danger"><span class="ic">!</span><div><b>The Form 10IEA trap (ITR-3/4 filers only):</b> a business filer who wants the <em>old</em> regime must have filed Form 10IEA before the due date. If staying in the <b>new</b> regime, the portal still asks two 10IEA questions in Part A General — answer <b>No</b> to both ("filed 10IEA in earlier AY?" → No; "furnishing 10IEA for current AY?" → No). Leaving them blank throws a validation error.</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Capital gains rates (post-23 Jul 2024)</h3>
+      <div class="tablewrap"><table>
+        <tr><th>Type</th><th>Rate</th></tr>
+        <tr><td>STCG on listed equity/equity MF with STT (111A)</td><td class="num">20%</td></tr>
+        <tr><td>LTCG on listed equity/equity MF with STT (112A)</td><td class="num">12.5% above ₹1.25 lakh exempt</td></tr>
+        <tr><td>Listed equity holding period for "long-term"</td><td class="num">&gt; 12 months</td></tr>
+      </table></div>
+      <p style="font-size:13.5px;color:var(--ink-3)">Speculative (intraday) profit is taxed at normal slab rates as business income.</p>
+    </div>
+    <div class="card">
+      <h3>Loss set-off &amp; carry-forward</h3>
+      <ul style="font-size:14px;padding-left:20px;margin:4px 0">
+        <li><b>STCL</b> sets off against any capital gain; carries forward <b>8 years</b> (against capital gains only).</li>
+        <li><b>LTCL</b> sets off against LTCG only; carries forward 8 years.</li>
+        <li><b>Speculative loss</b> sets off only against speculative profit; carries forward 4 years.</li>
+        <li>Carry-forward is allowed <b>only if the return is filed by the due date</b>. This is the main reason to never file belated when there are losses.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Tax audit — and the due-date dropdown trap</h3>
+    <p style="font-size:14.5px">Audit u/s 44AB applies only when business turnover exceeds ₹1 crore (₹10 crore when ≥95% of receipts and payments are digital). For intraday, "turnover" is the sum of absolute profits and losses — a small trader is nowhere near it.</p>
+    <div class="callout danger"><span class="ic">!</span><div><b>Real error we hit:</b> selecting <b>31st October</b> as the due date made the portal demand a tax audit ("mandatory to have a tax audit under 44AB") and block upload. 31st October is the <em>audit-case</em> due date. A non-audit business filer must pick the earlier non-audit date — in 2026 the dropdown offered 31 Aug / 31 Oct / 30 Nov, and <b>31st August</b> was correct.</div></div>
+  </div>
+
+  <div class="card">
+    <h3>New-regime tax estimator <span class="pill okp">normal income only</span></h3>
+    <div class="calc">
+      <div class="calcrow"><label for="taxinc">Total income at normal rates (₹)</label><input type="number" id="taxinc" data-ck="calc-taxinc" min="0" step="1" placeholder="e.g. 96324"></div>
+      <div class="totalrow"><span>Slab tax before rebate</span><span class="num" id="taxslab">₹0</span></div>
+      <div class="totalrow" style="border-top:1px dashed var(--line)"><span>87A rebate</span><span class="num" id="taxrebate">₹0</span></div>
+      <div class="totalrow" style="border-top:1px dashed var(--line)"><span>Cess 4%</span><span class="num" id="taxcess">₹0</span></div>
+      <div class="totalrow"><span>Estimated tax</span><span class="num pos" id="taxfinal">₹0</span></div>
+      <p style="font-size:12.5px;color:var(--ink-3);margin-bottom:0">Excludes special-rate income (111A STCG, 112A LTCG), surcharge, and interest u/s 234. In the example filing, total income ₹96,324 was below ₹4 lakh → tax nil, and the ₹15 TDS came back as a ₹20 refund.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================== 05 PREP ================== -->
+<section class="section" id="sec-prep">
+  <div class="eyebrow">05 · Compute offline first</div>
+  <h2>Prep worksheet</h2>
+  <p class="lede">Fill these calculators from the broker reports and AIS <em>before</em> touching the portal. Everything you enter is saved in this browser and rolled up into the cheat sheet at the bottom — keep it open beside the portal while filing.</p>
+
+  <div class="card">
+    <h3>A · Speculative income (intraday)</h3>
+    <p style="font-size:13.5px;color:var(--ink-3)">From each broker's Tax P&amp;L, take the <b>net intraday / speculative</b> profit or loss (negative allowed).</p>
+    <div id="specrows"></div>
+    <button class="addrow" id="addspec">+ add broker</button>
+    <div class="totalrow"><span>Net speculative income</span><span class="num" id="spectotal">₹0</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>B · Short-term capital gains (111A)</h3>
+      <p style="font-size:13.5px;color:var(--ink-3)">Sum across <b>all</b> brokers: delivery-based equity + equity MF held ≤ 12 months.</p>
+      <div class="calcrow"><label for="stsale">Total sale consideration (₹)</label><input type="number" id="stsale" data-ck="calc-stsale" min="0"></div>
+      <div class="calcrow"><label for="stcost">Total cost of acquisition (₹)</label><input type="number" id="stcost" data-ck="calc-stcost" min="0"></div>
+      <div class="calcrow"><label for="stexp">Transfer expenses (₹)</label><input type="number" id="stexp" data-ck="calc-stexp" min="0" placeholder="0"></div>
+      <div class="totalrow"><span>Net STCG</span><span class="num" id="stnet">₹0</span></div>
+    </div>
+    <div class="card">
+      <h3>C · Long-term capital gains (112A)</h3>
+      <p style="font-size:13.5px;color:var(--ink-3)">Equity + equity MF held &gt; 12 months, STT paid.</p>
+      <div class="calcrow"><label for="ltsale">Total sale consideration (₹)</label><input type="number" id="ltsale" data-ck="calc-ltsale" min="0"></div>
+      <div class="calcrow"><label for="ltcost">Total cost of acquisition (₹)</label><input type="number" id="ltcost" data-ck="calc-ltcost" min="0"></div>
+      <div class="calcrow"><label for="ltexp">Transfer expenses (₹)</label><input type="number" id="ltexp" data-ck="calc-ltexp" min="0" placeholder="0"></div>
+      <div class="totalrow"><span>Net LTCG</span><span class="num" id="ltnet">₹0</span></div>
+    </div>
+  </div>
+
+  <div class="card" id="s112abox">
+    <h3>Schedule 112A — your manual-entry values</h3>
+    <p style="font-size:14px">The 112A CSV upload failed repeatedly in the real filing (<code>common.errors.csv_row_skip</code>) even with a correct file. <b>Skip the CSV — enter one consolidated row manually</b> via <kbd>+ Add Another</kbd> inside Schedule 112A, with exactly these values:</p>
+    <div class="tablewrap"><table>
+      <tr><th>Portal field</th><th>Value</th><th></th></tr>
+      <tr><td>1a. Share/unit acquired</td><td><code>AE</code> &nbsp;(= acquired After 31 Jan 2018; use <code>BE</code> only for pre-2018 holdings needing grandfathering)</td><td></td></tr>
+      <tr><td>2. ISIN code</td><td><code>INNOTREQUIRD</code></td><td><button class="copybtn" data-copy="INNOTREQUIRD">copy</button></td></tr>
+      <tr><td>3. Name of share/unit</td><td><code>CONSOLIDATED</code></td><td><button class="copybtn" data-copy="CONSOLIDATED">copy</button></td></tr>
+      <tr><td>4 &amp; 5. Number / price per unit</td><td>leave blank or 0</td><td></td></tr>
+      <tr><td>6. Full value of consideration</td><td class="num" id="v112sale">—</td><td><button class="copybtn" id="cp112sale">copy</button></td></tr>
+      <tr><td>7 &amp; 8. Cost of acquisition</td><td class="num" id="v112cost">—</td><td><button class="copybtn" id="cp112cost">copy</button></td></tr>
+      <tr><td>12. Transfer expenditure</td><td class="num" id="v112exp">0</td><td></td></tr>
+      <tr><td>14. Balance (auto)</td><td class="num" id="v112bal">—</td><td></td></tr>
+    </table></div>
+    <div class="callout warn"><span class="ic">!</span><div>Integers only, no commas, no symbols. One consolidated row across all brokers is accepted practice when broker-wise ISIN detail is impractical.</div></div>
+  </div>
+
+  <div class="card">
+    <h3>D · Interest income</h3>
+    <p style="font-size:13.5px;color:var(--ink-3)">From the AIS. Savings interest and FD interest go in <b>different rows</b> of Schedule OS — keep them separate here.</p>
+    <h4>Savings account interest</h4>
+    <div id="savrows"></div>
+    <button class="addrow" id="addsav">+ add savings account</button>
+    <div class="totalrow" style="border-top:1px dashed var(--line)"><span>Savings interest</span><span class="num" id="savtotal">₹0</span></div>
+    <h4>FD / term-deposit interest</h4>
+    <div id="fdrows"></div>
+    <button class="addrow" id="addfd">+ add deposit</button>
+    <div class="totalrow" style="border-top:1px dashed var(--line)"><span>FD interest</span><span class="num" id="fdtotal">₹0</span></div>
+    <div class="totalrow"><span>Total interest</span><span class="num" id="inttotal">₹0</span></div>
+  </div>
+
+  <div class="card">
+    <h3>E · Dividends + the quarterly split</h3>
+    <p style="font-size:13.5px;color:var(--ink-3)">Total dividend for the year (AIS has it, and the portal usually pre-fills it). Schedule OS then demands a <b>quarter-wise breakup</b> — if exact dates are unknown, an equal split is legal and accepted.</p>
+    <div class="calcrow"><label for="divtotal">Total dividend (₹)</label><input type="number" id="divtotal" data-ck="calc-div" min="0" placeholder="e.g. 12498"></div>
+    <div class="tablewrap"><table>
+      <tr><th>Up to 15/6</th><th>16/6 – 15/9</th><th>16/9 – 15/12</th><th>16/12 – 15/3</th><th>16/3 – 31/3</th></tr>
+      <tr><td class="num" id="dq1">—</td><td class="num" id="dq2">—</td><td class="num" id="dq3">—</td><td class="num" id="dq4">—</td><td class="num" id="dq5">—</td></tr>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h3>F · TDS entries (from Form 26AS)</h3>
+    <p style="font-size:13.5px;color:var(--ink-3)">One row per deductor. The portal usually pre-fills these — this is your check-against list. TAN format: 4 letters + 5 digits + 1 letter.</p>
+    <div id="tdsrows"></div>
+    <button class="addrow" id="addtds">+ add deductor</button>
+    <div class="totalrow"><span>Total TDS to claim</span><span class="num" id="tdstotal">₹0</span></div>
+  </div>
+
+  <div class="card cheat">
+    <h3>📋 Cheat sheet — keep beside the portal</h3>
+    <div class="tablewrap"><table>
+      <tr><td>Speculative income (Schedule BP / P&amp;L item 65)</td><td class="num" id="cs-spec">₹0</td></tr>
+      <tr><td>STCG 111A — sale value (Schedule CG A2)</td><td class="num" id="cs-stsale">₹0</td></tr>
+      <tr><td>STCG 111A — cost of acquisition</td><td class="num" id="cs-stcost">₹0</td></tr>
+      <tr><td>STCG 111A — net</td><td class="num" id="cs-stnet">₹0</td></tr>
+      <tr><td>LTCG 112A — sale / cost / net</td><td class="num" id="cs-lt">₹0 / ₹0 / ₹0</td></tr>
+      <tr><td>Savings interest (OS row: savings bank)</td><td class="num" id="cs-sav">₹0</td></tr>
+      <tr><td>FD interest (OS row: term deposit)</td><td class="num" id="cs-fd">₹0</td></tr>
+      <tr><td>Dividend total (OS)</td><td class="num" id="cs-div">₹0</td></tr>
+      <tr><td>Dividend quarterly split</td><td class="num" id="cs-divq">—</td></tr>
+      <tr><td>Total TDS</td><td class="num" id="cs-tds">₹0</td></tr>
+    </table></div>
+    <p style="font-size:12.5px;color:var(--ink-3);margin-bottom:0">Worked example these tools were built on: speculative ₹27,649 · STCG −₹45,424 (sale ₹1,58,88,671, cost ₹1,59,34,095) · LTCG −₹74,644 (sale ₹3,20,518, cost ₹3,95,162) · savings interest ₹5,363 · FD interest ₹50,814 · dividends ₹12,498 · TDS ₹15 → total income ₹96,324, tax nil, refund ₹20, losses ₹1,20,068 carried forward.</p>
+  </div>
+</section>
+
+<!-- ================== 06 WALKTHROUGH ================== -->
+<section class="section" id="sec-walk">
+  <div class="eyebrow">06 · The main event</div>
+  <h2>Portal walkthrough</h2>
+  <p class="lede">Sixteen steps, in the order the portal presents them for ITR-3 (fewer screens for ITR-1/2 — skip what the portal doesn't show). Mark each step done; progress is saved.</p>
+
+  <div class="walkbar">
+    <div class="meta"><span id="walkmeta">0 of 16 done</span><span>saved automatically</span></div>
+    <div class="bar"><div class="fill" id="walkfill"></div></div>
+  </div>
+
+  <div id="steps">
+
+  <div class="step" data-step="w1">
+    <button class="step-head" aria-expanded="false"><span class="step-num">1</span><span class="step-title">Login &amp; start the return<span class="step-sub">e-File → Income Tax Returns → File Income Tax Return</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ol>
+        <li>Login at incometax.gov.in with PAN + password.</li>
+        <li>Menu: <span class="pathchain"><b>e-File</b> → <b>Income Tax Returns</b> → <b>File Income Tax Return</b></span>.</li>
+        <li>Assessment Year: <b>2026-27 (Current AY)</b>. Mode: <b>Online</b>. Click Continue, then <b>Start New Filing</b> (or <b>Resume Filing</b> if a draft exists).</li>
+        <li>Status: <b>Individual</b>.</li>
+      </ol>
+      <h5>Watch out</h5>
+      <ul><li>Drafts persist for weeks — a half-done return is always resumable via Resume Filing. Logging out loses nothing.</li></ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w1" id="ckw1"><label for="ckw1">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w2">
+    <button class="step-head" aria-expanded="false"><span class="step-num">2</span><span class="step-title">Choose the ITR form &amp; reason<span class="step-sub">Pick manually — don't rely on "Help me decide"</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ol>
+        <li>Select the form from the <button class="linkbtn" data-goto="form">quiz result</button> — e.g. <b>ITR-3</b> for any intraday/F&amp;O trader. Choose "I know which ITR Form I need to file".</li>
+        <li>Reason for filing: <b>"Taxable income is more than basic exemption limit"</b> — or if income is below the limit but you're filing to claim refunds / carry losses forward, pick the matching option honestly.</li>
+        <li>Filed u/s: <b>139(1) — on or before due date</b>.</li>
+      </ol>
+      <h5>Watch out</h5>
+      <ul><li>The wizard's auto-suggest doesn't know about intraday trading. Trust the quiz, not the wizard.</li></ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w2" id="ckw2"><label for="ckw2">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w3">
+    <button class="step-head" aria-expanded="false"><span class="step-num">3</span><span class="step-title">Select schedules<span class="step-sub">Tick only what applies — every tick becomes a screen to fill</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>For the trader profile (ITR-3), tick</h5>
+      <ul>
+        <li><b>Schedule BP</b> (business — auto-mandatory), <b>Schedule CG</b> (capital gains), <b>Schedule 112A</b> (if any LTCG on listed equity), <b>Schedule OS</b> (interest/dividends).</li>
+        <li>Mandatory ones (Part A General, Balance Sheet, P&amp;L, CYLA, BFLA, CFL, Part B) appear regardless.</li>
+      </ul>
+      <h5>Leave out</h5>
+      <ul><li>Salary (unless there is one), House Property (unless there is one), Schedule FA (no foreign assets), 80-series deduction schedules (pointless in new regime).</li></ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w3" id="ckw3"><label for="ckw3">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w4">
+    <button class="step-head" aria-expanded="false"><span class="step-num">4</span><span class="step-title">Part A — General <span class="pill block">trap zone</span><span class="step-sub">Due date, business questions, 10IEA, addresses — 4 of our 6 validation errors lived here</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Verify the pre-filled basics</h5>
+      <ul><li>Name, PAN, DOB, Aadhaar, address, email, mobile — all pre-filled from the profile. Fix anything stale.</li></ul>
+      <h5>Answer these exactly</h5>
+      <ol>
+        <li><b>Due date for filing:</b> pick the <b>non-audit</b> date — <b>31st August</b> in 2026. Never 31st October unless there's a genuine 44AB audit (it triggers a blocking error demanding audit details).</li>
+        <li><b>Filed u/s:</b> 139(1).</li>
+        <li><b>A19(b) — income from business or profession this AY?</b> → <b>Yes</b> (intraday counts). A "No" here throws two linked validation errors later.</li>
+        <li><b>A19(l) — filed Form 10IEA in an earlier AY for old regime?</b> → <b>No</b> (if staying in new regime).</li>
+        <li><b>Furnishing 10IEA for current AY?</b> → <b>No</b>.</li>
+        <li><b>Opt for old tax regime?</b> → <b>No</b>.</li>
+        <li><b>"Is the secondary address same as primary?"</b> → answer it (usually <b>Yes</b>) — leaving it blank is a blocking defect.</li>
+        <li>Residential status: <b>Resident</b> (182+ days condition). Director in a company? Partner in firm? Unlisted shares? Seventh proviso 139(1)? — usually all <b>No</b>.</li>
+      </ol>
+      <div class="callout danger"><span class="ic">!</span><div><b>A19(b) can silently reset to "No"</b> when you re-edit other Part A fields (it happened to us after changing the due date). Re-check A19(b) + both 10IEA answers every time you touch this schedule.</div></div>
+      <h5>Nature of business (bottom of Part A)</h5>
+      <ul><li>For share trading add code <code>21010</code> — <i>Financial intermediation: investment activities</i> (we also carried <code>21009</code>). No trade name needed for an individual trader.</li></ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w4" id="ckw4"><label for="ckw4">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w5">
+    <button class="step-head" aria-expanded="false"><span class="step-num">5</span><span class="step-title">Part A — Balance Sheet<span class="step-sub">"No books" case: item 6 only, rest zeros</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ul>
+        <li>A casual trader doesn't maintain books of account (and Part A General's audit section already said 44AA/44AB = No).</li>
+        <li>Skip items 1–5 (the full balance sheet). In the <b>"no books of account"</b> item (6), you may enter rough year-end figures: cash balance / bank balance / amounts receivable — zeros are accepted for a pure trading setup where the broker holds everything.</li>
+        <li>Confirm the schedule.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w5" id="ckw5"><label for="ckw5">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w6">
+    <button class="step-head" aria-expanded="false"><span class="step-num">6</span><span class="step-title">Manufacturing &amp; Trading Accounts<span class="step-sub">Skip both — leave unconfirmed or zero</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <ul>
+        <li><b>Manufacturing Account:</b> not applicable to a trader of securities. Leave everything blank/zero.</li>
+        <li><b>Trading Account:</b> also skip — a securities trader without books reports through the "no accounts" rows of the P&amp;L instead (next step). Do not force the intraday turnover in here.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w6" id="ckw6"><label for="ckw6">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w7">
+    <button class="step-head" aria-expanded="false"><span class="step-num">7</span><span class="step-title">Part A — P&amp;L<span class="step-sub">Speculative activity rows: turnover, gross profit, expenses, net</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ul>
+        <li>Skip the detailed P&amp;L (items 13–60) — that's for books-maintained businesses.</li>
+        <li>Find the <b>speculative activity</b> block (item 65 in the form): enter
+          <ul>
+            <li><b>Turnover</b> — sum of absolute intraday profits and losses (our filing used the net figure ₹27,649 for both turnover and gross profit; the absolute-sum method is the technically preferred turnover, and either passes validation for small amounts)</li>
+            <li><b>Gross profit</b> — the net speculative profit from worksheet A</li>
+            <li><b>Expenditure</b> — 0 (or actual charges if you want to claim them)</li>
+            <li><b>Net income from speculative activity</b> — gross profit minus expenditure</li>
+          </ul>
+        </li>
+      </ul>
+      <h5>Watch out</h5>
+      <ul><li>The number entered here must equal what Schedule BP shows as speculative income — the portal carries it forward automatically if you enter it only here.</li></ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w7" id="ckw7"><label for="ckw7">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w8">
+    <button class="step-head" aria-expanded="false"><span class="step-num">8</span><span class="step-title">Part A — OI (Other Information)<span class="step-sub">Method of accounting; everything else zeros</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <ul>
+        <li>Method of accounting: <b>Mercantile</b>. Change in method: No. Everything else (disallowances u/s 36/37/40/43B, ICDS adjustments): <b>0</b>.</li>
+        <li>Confirm and move on — this schedule exists for audited businesses.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w8" id="ckw8"><label for="ckw8">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w9">
+    <button class="step-head" aria-expanded="false"><span class="step-num">9</span><span class="step-title">Schedule BP — business income<span class="step-sub">Verify speculative income flowed through; don't double-enter</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <ul>
+        <li>The speculative figure from the P&amp;L should already appear under <b>speculative business</b> (rows 2a/2b: net profit from speculative business → adjusted profit).</li>
+        <li>Non-speculative business rows: 0. "Income chargeable under profits &amp; gains": should equal the speculative income.</li>
+        <li>If the schedule asks about income credited to P&amp;L that belongs to other heads (dividends, capital gains): 0 — we never put those in the P&amp;L.</li>
+      </ul>
+      <div class="callout info"><span class="ic">i</span><div>If a validation later complains about "dividend income reduced from Schedule BP" consistency, it's the ignorable Category B/D defect — see the <button class="linkbtn" data-goto="errors">Error fixer</button>.</div></div>
+      <div class="step-done-row"><input type="checkbox" data-ck="w9" id="ckw9"><label for="ckw9">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w10">
+    <button class="step-head" aria-expanded="false"><span class="step-num">10</span><span class="step-title">Schedule CG — short-term gains<span class="step-sub">Section 111A block: consolidated sale value & cost across brokers</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ol>
+        <li>Open the STCG section → <b>"Equity share or unit of equity oriented MF on which STT paid u/s 111A"</b>.</li>
+        <li>Full value of consideration = total sale value from worksheet B.</li>
+        <li>Cost of acquisition = total buy value. Expenses = 0 (or actuals).</li>
+        <li>The balance computes automatically — a negative (loss) is fine and expected.</li>
+      </ol>
+      <h5>Watch out</h5>
+      <ul>
+        <li>One consolidated entry across all brokers is fine — no scrip-wise detail is required for STCG.</li>
+        <li>Later in the schedule, the <b>quarter-wise accrual table</b> (section F) only needs filling if there's a <em>gain</em>; with a net loss, zeros are fine.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w10" id="ckw10"><label for="ckw10">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w11">
+    <button class="step-head" aria-expanded="false"><span class="step-num">11</span><span class="step-title">Schedule 112A — long-term gains <span class="pill block">CSV trap</span><span class="step-sub">Skip the CSV; add one manual consolidated row</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ol>
+        <li>Ignore <kbd>Upload CSV</kbd>. Click <kbd>+ Add Another</kbd> and enter the single consolidated row from the <button class="linkbtn" data-goto="prep">prep worksheet</button> (values with copy buttons there):</li>
+      </ol>
+      <ul>
+        <li>Col 1a: <code>AE</code> (after 31 Jan 2018) — <code>BE</code> only for grandfathered pre-2018 holdings, which then need FMV data</li>
+        <li>ISIN: <code>INNOTREQUIRD</code> · Name: <code>CONSOLIDATED</code></li>
+        <li>Consideration and cost as integers; balance auto-computes (loss shows negative)</li>
+      </ul>
+      <h5>Why not the CSV</h5>
+      <ul>
+        <li>In the real filing the CSV failed four times with <code>common.errors.csv_row_skip</code> despite matching the official template — wrong 1a text, unicode minus signs, and header quirks are all fatal, and the error message never says which. Manual entry took two minutes.</li>
+      </ul>
+      <div class="callout ok"><span class="ic">✓</span><div>After saving, Schedule CG's LTCG section picks the figure up automatically ("Sale of equity share u/s 112A").</div></div>
+      <div class="step-done-row"><input type="checkbox" data-ck="w11" id="ckw11"><label for="ckw11">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w12">
+    <button class="step-head" aria-expanded="false"><span class="step-num">12</span><span class="step-title">Schedule OS — interest &amp; dividends<span class="step-sub">Separate rows for savings vs FD interest; dividend needs the quarterly split</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ol>
+        <li><b>Dividend (other than 2(22)(e)):</b> usually pre-filled from AIS — verify against your total.</li>
+        <li><b>Interest from savings bank:</b> worksheet D savings total.</li>
+        <li><b>Interest from term deposits:</b> worksheet D FD total.</li>
+        <li>Scroll to the <b>dividend quarter-wise breakup</b> (row 3a / DividendIncUs115BBDA table with 5 columns: up to 15/6, 16/6–15/9, 16/9–15/12, 16/12–15/3, 16/3–31/3): enter the split from worksheet E. The five cells must sum exactly to the dividend total.</li>
+      </ol>
+      <h5>Watch out</h5>
+      <ul>
+        <li>The quarterly table is <b>mandatory once dividend &gt; 0</b> — skipping it is a validation error. An equal split is legal when exact receipt dates are unknown (it only affects 234C interest calculation, irrelevant at nil tax).</li>
+        <li>Savings interest deduction 80TTA does <b>not</b> apply in the new regime — don't look for it.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w12" id="ckw12"><label for="ckw12">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w13">
+    <button class="step-head" aria-expanded="false"><span class="step-num">13</span><span class="step-title">CYLA → BFLA → CFL<span class="step-sub">Three auto-computed loss schedules — verify and confirm each</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>What each shows</h5>
+      <ul>
+        <li><b>CYLA</b> (current-year set-off): business + other-sources income appear; capital-loss rows show 0 set-off (capital losses can't offset other heads). Keep "edit auto-populated?" = <b>No</b>, confirm.</li>
+        <li><b>BFLA</b> (brought-forward): all zeros if no earlier-year losses. Confirm.</li>
+        <li><b>CFL</b> (carry-forward): the current AY row must show the STCL and LTCL amounts. Past-year rows and their date-of-filing fields stay <b>blank</b> when there are no old losses. The bottom total = STCL + LTCL.</li>
+      </ul>
+      <div class="callout ok"><span class="ic">✓</span><div>In the example: CFL row "2026-27" showed ₹45,424 (STCL) + ₹74,644 (LTCL) = ₹1,20,068 carried forward — usable against capital gains for 8 years.</div></div>
+      <div class="step-done-row"><input type="checkbox" data-ck="w13" id="ckw13"><label for="ckw13">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w14">
+    <button class="step-head" aria-expanded="false"><span class="step-num">14</span><span class="step-title">UD · SI · AMTC — the zero schedules<span class="step-sub">Open each, verify zeros, confirm</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <ul>
+        <li><b>Schedule UD</b> — unabsorbed depreciation: all zeros for a trader with no assets. Confirm.</li>
+        <li><b>Schedule SI</b> — special-rate income: a long list (115A/115AD/115BB…) that's ₹0 on every row for a resident with net capital <em>losses</em>. Scroll to the bottom, confirm.</li>
+        <li><b>Schedule AMTC</b> — AMT credit: zeros. Confirm.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w14" id="ckw14"><label for="ckw14">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w15">
+    <button class="step-head" aria-expanded="false"><span class="step-num">15</span><span class="step-title">Tax Paid (TDS) → Part B-TI → Part B-TTI<span class="step-sub">Verify TDS rows, total income, and the refund figure</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Tax Paid screen</h5>
+      <ul>
+        <li><b>TDS 2</b> (non-salary TDS) pre-fills from 26AS — verify each row's TAN, section (e.g. <code>194K</code> for MF dividend, <code>194A</code> for bank interest), gross amount, and TDS against worksheet F. "Claimed in own hands" should equal deducted.</li>
+        <li>TDS 1 (salary), TDS 3, TCS, advance tax: fill only if they exist. Confirm.</li>
+      </ul>
+      <h5>Part B-TI (total income)</h5>
+      <ul>
+        <li>Check: business income + other sources = gross total income; capital gains row 0 when losses; row 18 "losses carried forward" equals the CFL total; deductions 0 in new regime.</li>
+      </ul>
+      <h5>Part B-TTI (tax liability)</h5>
+      <ul>
+        <li>Tax on total income → rebate → cess → net liability. Taxes paid = TDS. The screen ends with either <b>Amount payable</b> (pay via e-Pay Tax as self-assessment before submitting) or <b>Refund</b>.</li>
+        <li>Foreign-assets question at the bottom: <b>No</b> for a resident with no foreign holdings.</li>
+      </ul>
+      <div class="step-done-row"><input type="checkbox" data-ck="w15" id="ckw15"><label for="ckw15">Step done</label></div>
+    </div>
+  </div>
+
+  <div class="step" data-step="w16">
+    <button class="step-head" aria-expanded="false"><span class="step-num">16</span><span class="step-title">Preview → Validate → Submit → e-Verify<span class="step-sub">Declaration, defect categories, and the final OTP</span></span><span class="step-caret">▶</span></button>
+    <div class="step-body">
+      <h5>Do this</h5>
+      <ol>
+        <li>On <b>Preview and Submit</b>: tick the declaration checkbox, capacity <b>Self</b>, fill <b>Place</b> (city), leave TRP fields blank. <kbd>Proceed To Validation</kbd>.</li>
+        <li><b>Category A defects block upload</b> — fix every one (see <button class="linkbtn" data-goto="errors">Error fixer</button>) and re-validate. <b>Category B/D are warnings</b> — read them; the dividend-consistency one is ignorable for a no-books filer.</li>
+        <li>On "Validation successful": <kbd>Preview</kbd> shows the full return as a PDF-style document — <b>read it once, top to bottom</b>. You can still download the JSON here for an offline check.</li>
+        <li><kbd>Proceed To Verification</kbd> → choose <b>E-Verify Now → Aadhaar OTP</b> (or <b>E-Verify Later</b>: submits now, 30 days to verify — the return is locked either way).</li>
+        <li>Enter OTP → note the 15-digit <b>acknowledgement number</b>; the ITR-V lands in email too.</li>
+      </ol>
+      <div class="callout danger"><span class="ic">!</span><div><b>Point of no return:</b> submission (even with E-Verify Later) locks the return. To review once more first, just log out — the draft stays. Only submit when the preview reads clean.</div></div>
+      <div class="step-done-row"><input type="checkbox" data-ck="w16" id="ckw16"><label for="ckw16">Step done</label></div>
+    </div>
+  </div>
+
+  </div><!-- /steps -->
+  <div class="stamp" id="filedstamp">✓ Filed</div>
+</section>
+
+<!-- ================== 07 ERRORS ================== -->
+<section class="section" id="sec-errors">
+  <div class="eyebrow">07 · When the portal says no</div>
+  <h2>Error fixer</h2>
+  <p class="lede">Every validation error and portal quirk from the real filing, with the exact fix. Category A blocks upload; Category B/D lets you proceed. Type to filter.</p>
+  <input type="text" class="errsearch" id="errsearch" placeholder="Filter errors… e.g. csv, audit, 10IEA, dividend">
+
+  <div id="errlist">
+
+  <div class="card errcard" data-tags="csv 112a row skip upload ltcg long term">
+    <h3>Schedule 112A CSV upload fails <span class="pill block">blocking</span></h3>
+    <div class="errmsg">common.errors.csv_row_skip</div>
+    <p><b>Cause:</b> the CSV validator is unforgiving and the error never says why. Known fatal issues: writing the full text "After 31st January, 2018" instead of the code <code>AE</code>/<code>BE</code> in column 1a; unicode minus "−" in the header; commas/decimals in numbers; missing ISIN.</p>
+    <p><b>Fix:</b> abandon the CSV. Use <kbd>+ Add Another</kbd> to enter one consolidated row manually: 1a=<code>AE</code>, ISIN=<code>INNOTREQUIRD</code>, name=<code>CONSOLIDATED</code>, integer sale value and cost. Two minutes, works first time.</p>
+  </div>
+
+  <div class="card errcard" data-tags="audit 44ab october due date blocking">
+    <h3>Due date forces a tax audit <span class="pill block">blocking</span></h3>
+    <div class="errmsg">Since you have selected 31st October as due date, it is mandatory to have a tax audit under 44AB.</div>
+    <p><b>Cause:</b> 31st October is the audit-case due date. Picking it tells the portal you're an audit case.</p>
+    <p><b>Fix:</b> Part A General → change due date to the <b>non-audit</b> date (31st August in 2026; normally 31st July). Re-validate. No audit schedules needed.</p>
+  </div>
+
+  <div class="card errcard" data-tags="a19b business profession yes specified 48 blocking">
+    <h3>A19(b) business-income question wrong or reset <span class="pill block">blocking</span></h3>
+    <div class="errmsg">Please select Yes for 'Do you have income from business or profession for current AY' if you have any income from Business or Profession.
+48. Income from specified business (46-47): Please select option as 'Yes' at Sl.no.A19(b)…</div>
+    <p><b>Cause:</b> A19(b) in Part A General is "No" while Schedule BP has business income. These two errors always come as a pair. <b>Beware:</b> editing other Part A fields (like the due date) can silently reset A19(b) back to No.</p>
+    <p><b>Fix:</b> Part A General → A19(b) = <b>Yes</b> → then answer the two Form 10IEA follow-ups (both <b>No</b> for new regime) → save. Re-check A19(b) after any later edit to Part A.</p>
+  </div>
+
+  <div class="card errcard" data-tags="10iea form regime old new blocking">
+    <h3>Form 10IEA questions left blank <span class="pill block">blocking</span></h3>
+    <div class="errmsg">Please select option for have you filed form10IEA within due date for any earlier assessment year</div>
+    <p><b>Cause:</b> setting A19(b)=Yes reveals two 10IEA questions that start unanswered.</p>
+    <p><b>Fix (staying in new regime):</b> "filed 10IEA in earlier AY?" → <b>No</b>; "furnishing 10IEA for current AY?" → <b>No</b>. (Only a business filer switching to the <em>old</em> regime files 10IEA, and it must be before the due date.)</p>
+  </div>
+
+  <div class="card errcard" data-tags="secondary address primary general blocking">
+    <h3>Secondary address question unanswered <span class="pill block">blocking</span></h3>
+    <div class="errmsg">Kindly select the appropriate option for secondary address in Schedule Part A General</div>
+    <p><b>Fix:</b> Part A General → Contact section → "Is the secondary address same as primary address?" → <b>Yes</b> (unless a genuinely different address is needed). Save.</p>
+  </div>
+
+  <div class="card errcard" data-tags="dividend quarterly breakup os other sources 3a">
+    <h3>Dividend quarterly breakup missing <span class="pill block">blocking</span></h3>
+    <div class="errmsg">Quarterly breakup of dividend income should be equal to dividend income reduced in Schedule OS (row 3a)</div>
+    <p><b>Cause:</b> Schedule OS has dividend &gt; 0 but the five-column quarter table is empty or doesn't sum to the total.</p>
+    <p><b>Fix:</b> fill the table (columns: up to 15/6 · 16/6–15/9 · 16/9–15/12 · 16/12–15/3 · 16/3–31/3). Equal split is legal when dates are unknown — use the <button class="linkbtn" data-goto="prep">splitter</button>. Cells must sum exactly to the dividend figure.</p>
+  </div>
+
+  <div class="card errcard soft-b" data-tags="dividend bp consistency books warning ignore category b d">
+    <h3>Dividend consistency between BP and OS <span class="pill soft">warning — usually ignore</span></h3>
+    <div class="errmsg">If you are required to prepare/maintain books of account and dividend income is reported in Profit &amp; Loss Account, please ensure consistency… Please ignore if not applicable.</div>
+    <p><b>Cause:</b> a generic cross-check for businesses that route dividends through their P&amp;L.</p>
+    <p><b>Fix:</b> none needed for a no-books filer whose dividends sit only in Schedule OS. The message itself says "ignore if not applicable" — click <kbd>Proceed To Verification</kbd>.</p>
+  </div>
+
+  <div class="card errcard soft-b" data-tags="july due date dropdown missing options august">
+    <h3>Expected due date not in the dropdown <span class="pill soft">quirk</span></h3>
+    <div class="errmsg">Dropdown shows only: 31st August · 31st October · 30th November</div>
+    <p><b>Cause:</b> CBDT extended the year's deadlines; the classic 31st July option disappears in extension years.</p>
+    <p><b>Fix:</b> pick the earliest listed date that isn't an audit date — that is the non-audit due date (31st August here). October = audit, November = transfer-pricing.</p>
+  </div>
+
+  <div class="card errcard soft-b" data-tags="tds paise round gross amount 26as">
+    <h3>TDS shows odd small amounts (paise rounding) <span class="pill soft">quirk</span></h3>
+    <div class="errmsg">26AS shows TDS ₹14.78; portal row shows ₹15</div>
+    <p><b>Cause:</b> the portal works in whole rupees and rounds each 26AS entry.</p>
+    <p><b>Fix:</b> accept the pre-filled rounded figure. Also expect the deductor's <em>gross amount</em> to be only its own payout (e.g. ₹148 from one AMC), not your full dividend total — that's correct; the rest of the dividend simply had no TDS because each other payer stayed under the 194K per-payer threshold (₹10,000 from FY 2025-26).</p>
+  </div>
+
+  <div class="card errcard soft-b" data-tags="refund rounding 20 15 tti">
+    <h3>Refund ≠ TDS paid <span class="pill soft">quirk</span></h3>
+    <div class="errmsg">Taxes paid ₹15 but refund shows ₹20</div>
+    <p><b>Cause:</b> section 288B rounding — the final refund/demand is rounded to the nearest ₹10.</p>
+    <p><b>Fix:</b> nothing. It's normal.</p>
+  </div>
+
+  </div>
+  <p id="errnone" class="hidden" style="color:var(--ink-3)">No errors match that filter.</p>
+</section>
+
+<!-- ================== 08 VERIFY ================== -->
+<section class="section" id="sec-verify">
+  <div class="eyebrow">08 · Sealing it</div>
+  <h2>Submit &amp; e-verify</h2>
+  <p class="lede">The return isn't filed until it's verified. And once submitted, it's frozen — so this is also your last-chance review ritual.</p>
+
+  <div class="card">
+    <h3>Last-chance review (before Proceed to Verification)</h3>
+    <div class="ckitem"><input type="checkbox" data-ck="v-json" id="v-json"><label for="v-json">Download the JSON / preview PDF and read every schedule once<span class="ckdesc">Check: PAN &amp; name, bank account for refund, each income figure against the cheat sheet, CFL losses, TDS rows, refund amount.</span></label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="v-regime" id="v-regime"><label for="v-regime">Regime answers correct (10IEA No/No for new regime)</label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="v-duedate" id="v-duedate"><label for="v-duedate">Due date is the non-audit date</label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="v-cfl" id="v-cfl"><label for="v-cfl">Schedule CFL shows the losses being carried forward</label></div>
+    <div class="ckitem"><input type="checkbox" data-ck="v-catA" id="v-catA"><label for="v-catA">Zero Category A defects; each B/D warning read and understood</label></div>
+    <div class="callout warn"><span class="ic">!</span><div>Not sure about something? <b>Log out.</b> The draft persists; nothing is lost. Resume via e-File → Income Tax Returns → Resume Filing. Only submit when every box above is ticked.</div></div>
+  </div>
+
+  <div class="card">
+    <h3>Verification options</h3>
+    <div class="tablewrap"><table>
+      <tr><th>Option</th><th>How</th><th>Use when</th></tr>
+      <tr><td><b>E-Verify Now</b> (recommended)</td><td>Aadhaar OTP to the linked mobile (also: pre-validated bank/demat EVC)</td><td>The linked mobile is in hand. Instant, done.</td></tr>
+      <tr><td><b>E-Verify Later</b></td><td>Return submits now; verify within <b>30 days</b> via the same options</td><td>OTP mobile not available today. ⚠ The return is already locked — this is not a review window.</td></tr>
+      <tr><td><b>ITR-V by post</b></td><td>Sign the ITR-V and speed-post to CPC Bengaluru within 30 days</td><td>Last resort only.</td></tr>
+    </table></div>
+    <div class="callout danger"><span class="ic">!</span><div>Miss the 30-day verification window and the return is treated as <b>never filed</b> — with all late-filing consequences, including losing loss carry-forward.</div></div>
+  </div>
+
+  <div class="card">
+    <h3>What success looks like</h3>
+    <ul style="font-size:14.5px;padding-left:20px">
+      <li>Green banner: <b>"Filed successfully — your return has been verified."</b></li>
+      <li>A 15-digit acknowledgement number — save it with the JSON and ITR-V PDF.</li>
+      <li>Status timeline: Filed → Verified → <i>Return Processing</i> → Processed.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================== 09 AFTER ================== -->
+<section class="section" id="sec-after">
+  <div class="eyebrow">09 · Aftercare</div>
+  <h2>After filing</h2>
+  <p class="lede">The return processes on its own; here's what to expect and when to act.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h3>Timelines</h3>
+      <div class="tablewrap"><table>
+        <tr><td>Processing (143(1) intimation)</td><td class="num">typically 3–6 weeks</td></tr>
+        <tr><td>Refund credit after processing</td><td class="num">a few days, direct to the pre-validated account</td></tr>
+        <tr><td>With minor queries</td><td class="num">up to 2–3 months</td></tr>
+      </table></div>
+      <p style="font-size:14px">Track: <span class="pathchain"><b>e-File</b> → <b>Income Tax Returns</b> → <b>View Filed Returns</b></span>.</p>
+    </div>
+    <div class="card">
+      <h3>Keep forever (well, 8+ years)</h3>
+      <ul style="font-size:14px;padding-left:20px;margin:4px 0">
+        <li>Acknowledgement (ITR-V) + the filed JSON</li>
+        <li>Broker P&amp;L reports and AIS PDF used</li>
+        <li>The loss carry-forward figures — next year's BFLA/CFL schedules will need them, per year, per loss type</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>If something was wrong after all</h3>
+    <ul style="font-size:14.5px;padding-left:20px">
+      <li><b>Revised return u/s 139(5):</b> can be filed any number of times until 31 December of the AY — it fully replaces the original. Same process, but choose "Revised" and quote the original acknowledgement number.</li>
+      <li><b>143(1) intimation with a demand:</b> compare their computation column with yours; respond/pay or file rectification u/s 154 if they're wrong.</li>
+      <li><b>Defective-return notice u/s 139(9):</b> respond within the stated window through e-Proceedings — usually the same fixes as the Error fixer section.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Next year's head start</h3>
+    <ul style="font-size:14.5px;padding-left:20px">
+      <li>Enter last year's carried-forward losses in <b>Schedule CFL's earlier-year rows</b> (with the original filing date) and watch <b>BFLA</b> set them off against any new gains.</li>
+      <li>Once a trader, the ITR-3 pattern repeats — this walkthrough stays valid; only amounts change.</li>
+      <li>If advance tax becomes relevant (tax liability ≥ ₹10,000), instalments fall due 15 Jun / 15 Sep / 15 Dec / 15 Mar.</li>
+    </ul>
+  </div>
+
+  <div class="footer-note">
+    <p>Personal reference guide distilled from a real AY 2026-27 ITR-3 filing. Not professional tax advice — rules and thresholds change every Budget; for high stakes or ambiguity, consult a CA. Your ticks and figures live only in this browser's local storage.</p>
+    <button class="resetbtn" id="resetall">Reset all saved progress &amp; figures</button>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+(function(){
+"use strict";
+var LS='itrcopilot.';
+function save(k,v){try{localStorage.setItem(LS+k,JSON.stringify(v))}catch(e){}}
+function load(k,d){try{var v=localStorage.getItem(LS+k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function inr(n){
+  n=Math.round(n);var neg=n<0;n=Math.abs(n);
+  var s=String(n),last3=s.slice(-3),rest=s.slice(0,-3);
+  if(rest)last3=','+last3;
+  return (neg?'−₹':'₹')+rest.replace(/\B(?=(\d{2})+(?!\d))/g,',')+last3;
+}
+function num(el){var v=parseFloat(el.value);return isNaN(v)?0:v}
+
+/* ---------- navigation ---------- */
+var sections=document.querySelectorAll('.section');
+var navlinks=document.querySelectorAll('.navlink');
+function goTo(sec){
+  sections.forEach(function(s){s.classList.toggle('visible',s.id==='sec-'+sec)});
+  navlinks.forEach(function(b){b.classList.toggle('active',b.dataset.sec===sec)});
+  window.scrollTo({top:0});
+  save('nav',sec);
+}
+navlinks.forEach(function(b){b.addEventListener('click',function(){goTo(b.dataset.sec)})});
+document.addEventListener('click',function(e){
+  var g=e.target.closest('[data-goto]');
+  if(g){goTo(g.dataset.goto)}
+});
+goTo(load('nav','start'));
+
+/* ---------- generic checkbox persistence ---------- */
+function bindChecks(){
+  document.querySelectorAll('input[type=checkbox][data-ck]').forEach(function(cb){
+    cb.checked=!!load('ck.'+cb.dataset.ck,false);
+    styleCk(cb);
+    cb.addEventListener('change',function(){
+      save('ck.'+cb.dataset.ck,cb.checked);
+      styleCk(cb);updateWalk();
+    });
+  });
+}
+function styleCk(cb){
+  var item=cb.closest('.ckitem');if(item)item.classList.toggle('done',cb.checked);
+  var step=cb.closest('.step');if(step)step.classList.toggle('done',cb.checked);
+}
+
+/* ---------- text/number input persistence ---------- */
+function bindInputs(){
+  document.querySelectorAll('input[data-ck]').forEach(function(inp){
+    if(inp.type==='checkbox')return;
+    var v=load('in.'+inp.dataset.ck,'');
+    if(v!=='')inp.value=v;
+    inp.addEventListener('input',function(){
+      save('in.'+inp.dataset.ck,inp.value);
+      recalcAll();
+    });
+  });
+}
+
+/* ---------- steps accordion ---------- */
+document.querySelectorAll('.step-head').forEach(function(h){
+  h.addEventListener('click',function(){
+    var st=h.parentElement,open=st.classList.toggle('open');
+    h.setAttribute('aria-expanded',open?'true':'false');
+  });
+});
+function updateWalk(){
+  var total=16,done=0;
+  for(var i=1;i<=total;i++){if(load('ck.w'+i,false))done++}
+  var pct=Math.round(done/total*100);
+  document.getElementById('walkmeta').textContent=done+' of '+total+' done';
+  document.getElementById('walkfill').style.width=pct+'%';
+  document.getElementById('navprogtext').textContent='Walkthrough: '+done+' / '+total+' steps';
+  document.getElementById('navprogfill').style.width=pct+'%';
+  document.getElementById('filedstamp').classList.toggle('show',done===total);
+}
+
+/* ---------- dynamic row lists (brokers, banks, fds, tds) ---------- */
+function rowList(cfg){
+  var box=document.getElementById(cfg.box);
+  var data=load(cfg.key,cfg.seed);
+  function render(){
+    box.innerHTML='';
+    data.forEach(function(row,i){
+      var div=document.createElement('div');div.className='calcrow';
+      var name=document.createElement('input');name.type='text';name.placeholder=cfg.namePh;name.value=row.n||'';
+      name.addEventListener('input',function(){data[i].n=name.value;save(cfg.key,data)});
+      var amt=document.createElement('input');amt.type='number';amt.placeholder='0';if(row.a!==''&&row.a!=null)amt.value=row.a;
+      if(!cfg.allowNeg)amt.min='0';
+      amt.addEventListener('input',function(){data[i].a=amt.value;save(cfg.key,data);recalcAll()});
+      var rm=document.createElement('button');rm.className='rmrow';rm.textContent='×';rm.title='remove row';
+      rm.addEventListener('click',function(){data.splice(i,1);save(cfg.key,data);render();recalcAll()});
+      div.appendChild(name);div.appendChild(amt);div.appendChild(rm);
+      box.appendChild(div);
+    });
+  }
+  document.getElementById(cfg.add).addEventListener('click',function(){
+    data.push({n:'',a:''});save(cfg.key,data);render();
+  });
+  render();
+  return function(){return data.reduce(function(s,r){var v=parseFloat(r.a);return s+(isNaN(v)?0:v)},0)};
+}
+var specSum=rowList({box:'specrows',add:'addspec',key:'rows.spec',namePh:'Broker (e.g. Zerodha)',allowNeg:true,
+  seed:[{n:'',a:''}]});
+var savSum=rowList({box:'savrows',add:'addsav',key:'rows.sav',namePh:'Bank (savings)',allowNeg:false,seed:[{n:'',a:''}]});
+var fdSum=rowList({box:'fdrows',add:'addfd',key:'rows.fd',namePh:'Bank / deposit',allowNeg:false,seed:[{n:'',a:''}]});
+var tdsSum=rowList({box:'tdsrows',add:'addtds',key:'rows.tds',namePh:'Deductor + TAN',allowNeg:false,seed:[{n:'',a:''}]});
+
+/* ---------- recalc everything ---------- */
+function setTxt(id,t){document.getElementById(id).textContent=t}
+function signClass(el,v){el.classList.remove('neg','pos');el.classList.add(v<0?'neg':'pos')}
+function recalcAll(){
+  /* A speculative */
+  var spec=specSum();var se=document.getElementById('spectotal');se.textContent=inr(spec);signClass(se,spec);
+  /* B stcg */
+  var sts=num(document.getElementById('stsale')),stc=num(document.getElementById('stcost')),stx=num(document.getElementById('stexp'));
+  var stnet=sts-stc-stx;var stel=document.getElementById('stnet');stel.textContent=inr(stnet);signClass(stel,stnet);
+  /* C ltcg */
+  var lts=num(document.getElementById('ltsale')),ltc=num(document.getElementById('ltcost')),ltx=num(document.getElementById('ltexp'));
+  var ltnet=lts-ltc-ltx;var ltel=document.getElementById('ltnet');ltel.textContent=inr(ltnet);signClass(ltel,ltnet);
+  /* 112A box */
+  setTxt('v112sale',lts?String(Math.round(lts)):'—');
+  setTxt('v112cost',ltc?String(Math.round(ltc)):'—');
+  setTxt('v112exp',String(Math.round(ltx)));
+  setTxt('v112bal',(lts||ltc)?String(Math.round(ltnet)):'—');
+  /* D interest */
+  var sav=savSum(),fd=fdSum();
+  setTxt('savtotal',inr(sav));setTxt('fdtotal',inr(fd));setTxt('inttotal',inr(sav+fd));
+  /* E dividends */
+  var dv=num(document.getElementById('divtotal'));
+  var q=Math.floor(dv/5),qlast=dv-4*q;
+  ['dq1','dq2','dq3','dq4'].forEach(function(id){setTxt(id,dv?String(q):'—')});
+  setTxt('dq5',dv?String(qlast):'—');
+  /* F tds */
+  var tds=tdsSum();setTxt('tdstotal',inr(tds));
+  /* cheat sheet */
+  setTxt('cs-spec',inr(spec));
+  setTxt('cs-stsale',inr(sts));setTxt('cs-stcost',inr(stc));
+  var cst=document.getElementById('cs-stnet');cst.textContent=inr(stnet);signClass(cst,stnet);
+  setTxt('cs-lt',inr(lts)+' / '+inr(ltc)+' / '+inr(ltnet));
+  setTxt('cs-sav',inr(sav));setTxt('cs-fd',inr(fd));setTxt('cs-div',inr(dv));
+  setTxt('cs-divq',dv?(q+' ×4 + '+qlast):'—');
+  setTxt('cs-tds',inr(tds));
+  /* tax estimator */
+  taxCalc();
+}
+
+/* ---------- tax estimator ---------- */
+function taxCalc(){
+  var inc=num(document.getElementById('taxinc'));
+  var slabs=[[400000,0],[800000,.05],[1200000,.10],[1600000,.15],[2000000,.20],[2400000,.25],[Infinity,.30]];
+  var tax=0,prev=0;
+  slabs.forEach(function(s){
+    if(inc>prev){tax+=(Math.min(inc,s[0])-prev)*s[1]}
+    prev=s[0];
+  });
+  var rebate=0;
+  if(inc<=1200000){rebate=Math.min(tax,60000)}
+  else{
+    /* marginal relief just above 12L */
+    var excess=inc-1200000;
+    if(tax-excess>0&&tax>excess){rebate=tax-excess;if(rebate<0)rebate=0;if(rebate>tax)rebate=tax}
+  }
+  var after=tax-rebate,cess=after*.04,total=Math.round(after+cess);
+  setTxt('taxslab',inr(tax));setTxt('taxrebate',rebate?('− '+inr(rebate)):'₹0');
+  setTxt('taxcess',inr(cess));setTxt('taxfinal',inr(total));
+}
+
+/* ---------- copy buttons ---------- */
+function bindCopy(btn,getval){
+  btn.addEventListener('click',function(){
+    var v=typeof getval==='function'?getval():getval;
+    if(!v||v==='—')return;
+    var done=function(){var t=btn.textContent;btn.textContent='✓';setTimeout(function(){btn.textContent=t},900)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(done,done)}
+    else{
+      var ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);
+      ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);done();
+    }
+  });
+}
+document.querySelectorAll('.copybtn[data-copy]').forEach(function(b){bindCopy(b,b.dataset.copy)});
+bindCopy(document.getElementById('cp112sale'),function(){return document.getElementById('v112sale').textContent});
+bindCopy(document.getElementById('cp112cost'),function(){return document.getElementById('v112cost').textContent});
+
+/* ---------- quiz ---------- */
+var QUIZ=[
+  {q:'Did they do any intraday equity trading or F&O trading during the year — even one trade?',
+   opts:[{t:'Yes — intraday and/or F&O',r:'ITR3'},{t:'No — only delivery-based buying/selling, or no trading at all',n:1}]},
+  {q:'Any other business or professional income (freelancing, consulting, shop, commission)?',
+   opts:[{t:'Yes — and they want presumptive taxation (44AD/44ADA), income ≤ ₹50 lakh, no loss carry-forward needed',r:'ITR4'},
+         {t:'Yes — with actual income/expense accounting',r:'ITR3'},{t:'No business income',n:2}]},
+  {q:'Any of these: capital gains or losses (selling shares/MF/property), more than one house property, foreign assets/income, total income above ₹50 lakh, director in a company, unlisted shares?',
+   opts:[{t:'Yes — at least one of those',r:'ITR2'},{t:'None of those',r:'ITR1'}]}
+];
+var VERDICT={
+  ITR1:{name:'ITR-1 (Sahaj)',d:'Simple salary/pension + one house + interest and dividends. The shortest form — most schedules in this guide won\'t appear.'},
+  ITR2:{name:'ITR-2',d:'Capital gains without any business income. Follow the walkthrough but skip steps 5–9 (the business schedules) — Schedule CG, 112A, OS, CYLA/CFL and everything after still applies as written.'},
+  ITR3:{name:'ITR-3',d:'Business income (intraday/F&O counts). This is the form the full walkthrough was built on — every step applies.'},
+  ITR4:{name:'ITR-4 (Sugam)',d:'Presumptive business income. Simpler than ITR-3, but no loss carry-forward and no capital-gains schedules — if they also sold shares at a loss, prefer ITR-3.'}
+};
+var quizStep=0;
+function renderQuiz(){
+  var box=document.getElementById('quizbox');
+  var st=QUIZ[quizStep];
+  var h='<div class="eyebrow">Question '+(quizStep+1)+' of '+QUIZ.length+'</div>';
+  h+='<div class="quizq">'+st.q+'</div><div class="quizopts">';
+  st.opts.forEach(function(o,i){h+='<button class="quizbtn" data-i="'+i+'">'+o.t+'</button>'});
+  h+='</div>';
+  if(quizStep>0)h+='<p style="margin-top:12px"><button class="linkbtn" id="quizback">← back</button></p>';
+  box.innerHTML=h;
+  box.querySelectorAll('.quizbtn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var o=st.opts[+b.dataset.i];
+      if(o.r){showVerdict(o.r)}else{quizStep=o.n;renderQuiz()}
+    });
+  });
+  var back=document.getElementById('quizback');
+  if(back)back.addEventListener('click',function(){quizStep=Math.max(0,quizStep-1);renderQuiz()});
+}
+function showVerdict(code){
+  var v=VERDICT[code],box=document.getElementById('quizbox');
+  box.innerHTML='<div class="eyebrow">Verdict</div>'+
+    '<div class="quizresult"><div class="formname">'+v.name+'</div>'+
+    '<p>'+v.d+'</p>'+
+    '<p><button class="linkbtn" id="quizrestart">↻ start over</button> &nbsp;·&nbsp; <button class="linkbtn" data-goto="prep">next: prep worksheet →</button></p></div>';
+  document.getElementById('quizrestart').addEventListener('click',function(){quizStep=0;renderQuiz()});
+}
+renderQuiz();
+
+/* ---------- error search ---------- */
+var errsearch=document.getElementById('errsearch');
+errsearch.addEventListener('input',function(){
+  var q=errsearch.value.trim().toLowerCase();
+  var any=false;
+  document.querySelectorAll('#errlist .errcard').forEach(function(c){
+    var hay=(c.textContent+' '+(c.dataset.tags||'')).toLowerCase();
+    var show=!q||hay.indexOf(q)>=0;
+    c.classList.toggle('hidden',!show);
+    if(show)any=true;
+  });
+  document.getElementById('errnone').classList.toggle('hidden',any);
+});
+
+/* ---------- reset ---------- */
+document.getElementById('resetall').addEventListener('click',function(){
+  if(!confirm('Clear all ticks and saved figures in this browser?'))return;
+  var keys=[];
+  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf(LS)===0)keys.push(k)}
+  keys.forEach(function(k){localStorage.removeItem(k)});
+  location.reload();
+});
+
+/* ---------- init ---------- */
+bindChecks();
+bindInputs();
+recalcAll();
+updateWalk();
+})();
+</script>
