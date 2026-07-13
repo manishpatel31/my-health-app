@@ -306,6 +306,54 @@ kbd{
   font-family:var(--mono);font-size:12px;background:var(--paper-2);
   border:1px solid var(--line);border-bottom-width:2.5px;border-radius:5px;padding:1px 7px;white-space:nowrap;
 }
+
+/* AI extract */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.chip{
+  background:var(--paper-2);border:1.5px solid var(--line);border-radius:20px;
+  padding:6px 15px;font-size:13.5px;color:var(--ink-2);font-weight:600;
+}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.promptbox{
+  background:var(--code-bg);border:1px solid var(--line);border-radius:8px;
+  padding:14px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.55;
+  white-space:pre-wrap;overflow-x:auto;max-height:420px;overflow-y:auto;margin:10px 0;
+}
+.bigcopy{
+  background:var(--accent);border:1px solid var(--accent);color:#fff;
+  border-radius:8px;padding:10px 22px;font-size:15px;font-weight:700;
+}
+:root[data-theme="dark"] .bigcopy{color:#0e1a14}
+@media (prefers-color-scheme:dark){.bigcopy{color:#0e1a14}}
+:root[data-theme="light"] .bigcopy{color:#fff}
+.bigcopy:hover{filter:brightness(1.1)}
+.bigbtn2{
+  background:var(--paper);border:1.5px solid var(--accent);color:var(--accent);
+  border-radius:8px;padding:9px 20px;font-size:14.5px;font-weight:700;
+}
+.bigbtn2:hover{background:var(--accent-soft)}
+textarea.paste{
+  width:100%;min-height:150px;resize:vertical;
+  background:var(--paper);color:var(--ink);border:1px solid var(--line);
+  border-radius:8px;padding:11px 13px;font-family:var(--mono);font-size:12.5px;line-height:1.5;
+}
+textarea.paste:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.impstatus{font-size:14px;margin:10px 0;padding:10px 14px;border-radius:8px;display:none}
+.impstatus.err{display:block;background:var(--danger-soft);border:1px solid var(--danger);color:var(--danger)}
+.impstatus.ok{display:block;background:var(--accent-soft);border:1px solid var(--accent)}
+.applybar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.flowline{display:flex;gap:0;align-items:stretch;margin:14px 0;flex-wrap:wrap}
+.flowstep{flex:1;min-width:150px;text-align:center;padding:12px 10px;position:relative}
+.flowstep .fnum{
+  font-family:var(--mono);font-weight:800;color:var(--accent);
+  border:2px solid var(--accent);border-radius:50%;width:30px;height:30px;
+  display:inline-flex;align-items:center;justify-content:center;margin-bottom:6px;background:var(--accent-soft);
+}
+.flowstep .ft{font-size:13px;color:var(--ink-2)}
+.flowstep+.flowstep::before{
+  content:'→';position:absolute;left:-8px;top:22px;color:var(--ink-3);font-size:16px;
+}
 .pathchain{font-size:13.5px;color:var(--ink-2);font-family:var(--sans)}
 .pathchain b{color:var(--ink)}
 
@@ -325,11 +373,12 @@ kbd{
     <button class="navlink" data-sec="docs"><span class="nlnum">02</span>Documents</button>
     <button class="navlink" data-sec="form"><span class="nlnum">03</span>Pick the form</button>
     <button class="navlink" data-sec="rules"><span class="nlnum">04</span>Rules &amp; regime</button>
-    <button class="navlink" data-sec="prep"><span class="nlnum">05</span>Prep worksheet</button>
-    <button class="navlink" data-sec="walk"><span class="nlnum">06</span>Portal walkthrough</button>
-    <button class="navlink" data-sec="errors"><span class="nlnum">07</span>Error fixer</button>
-    <button class="navlink" data-sec="verify"><span class="nlnum">08</span>Submit &amp; e-verify</button>
-    <button class="navlink" data-sec="after"><span class="nlnum">09</span>After filing</button>
+    <button class="navlink" data-sec="ai"><span class="nlnum">05</span>AI extract</button>
+    <button class="navlink" data-sec="prep"><span class="nlnum">06</span>Prep worksheet</button>
+    <button class="navlink" data-sec="walk"><span class="nlnum">07</span>Portal walkthrough</button>
+    <button class="navlink" data-sec="errors"><span class="nlnum">08</span>Error fixer</button>
+    <button class="navlink" data-sec="verify"><span class="nlnum">09</span>Submit &amp; e-verify</button>
+    <button class="navlink" data-sec="after"><span class="nlnum">10</span>After filing</button>
   </div>
   <div class="nav-progress">
     <span id="navprogtext">Walkthrough: 0 / 16 steps</span>
@@ -350,6 +399,7 @@ kbd{
     <ol>
       <li><b>Collect documents</b> — AIS, Form 26AS, broker P&amp;L reports, bank interest figures. <button class="linkbtn" data-goto="docs">Checklist →</button></li>
       <li><b>Pick the right ITR form</b> — one wrong answer here means starting over. <button class="linkbtn" data-goto="form">Decision quiz →</button></li>
+      <li><b>Let an AI read the documents</b> — copy a ready-made prompt, get JSON back, auto-fill the worksheet. <button class="linkbtn" data-goto="ai">AI extract →</button></li>
       <li><b>Compute the numbers offline first</b> — never derive figures inside the portal. <button class="linkbtn" data-goto="prep">Worksheet →</button></li>
       <li><b>File on the portal</b> — schedule by schedule, in the right order. <button class="linkbtn" data-goto="walk">Walkthrough →</button></li>
       <li><b>Fix validation errors</b> — they will appear; all the known ones are catalogued. <button class="linkbtn" data-goto="errors">Error fixer →</button></li>
@@ -500,11 +550,70 @@ kbd{
   </div>
 </section>
 
-<!-- ================== 05 PREP ================== -->
+<!-- ================== 05 AI EXTRACT ================== -->
+<section class="section" id="sec-ai">
+  <div class="eyebrow">05 · Let a machine read the paperwork</div>
+  <h2>AI extract</h2>
+  <p class="lede">Don't type numbers out of PDFs. Copy the prompt below into any AI app (Claude, ChatGPT, Gemini…) together with the document, paste the AI's JSON reply back here, and the <button class="linkbtn" data-goto="prep">prep worksheet</button> fills itself. Works for broker P&amp;Ls, AIS, Form 16, Form 26AS, TDS and interest certificates.</p>
+
+  <div class="card">
+    <div class="flowline">
+      <div class="flowstep"><div class="fnum">1</div><div class="ft">Pick document type &amp; copy the prompt</div></div>
+      <div class="flowstep"><div class="fnum">2</div><div class="ft">Paste prompt + attach the document in any AI app</div></div>
+      <div class="flowstep"><div class="fnum">3</div><div class="ft">Copy the AI's JSON reply</div></div>
+      <div class="flowstep"><div class="fnum">4</div><div class="ft">Paste it below → worksheet auto-fills</div></div>
+    </div>
+    <div class="callout warn"><span class="ic">!</span><div><b>Privacy first:</b> these documents carry PAN, account numbers and balances. Use an AI service the taxpayer is comfortable with, and prefer uploading the document over pasting raw text so you can delete the chat afterwards. Never paste portal passwords or OTPs anywhere.</div></div>
+  </div>
+
+  <div class="card">
+    <h3>Step 1 · The prompt</h3>
+    <p style="font-size:14px">Choose what you're feeding the AI — the prompt adapts. <b>Any / mixed</b> works for everything at once (you can attach several documents to one chat).</p>
+    <div class="chips" id="docchips">
+      <button class="chip on" data-doc="any">Any / mixed</button>
+      <button class="chip" data-doc="broker">Broker P&amp;L</button>
+      <button class="chip" data-doc="ais">AIS / TIS</button>
+      <button class="chip" data-doc="form16">Form 16 (salary)</button>
+      <button class="chip" data-doc="tds">26AS / TDS certificate</button>
+      <button class="chip" data-doc="bank">Bank interest certificate</button>
+    </div>
+    <div class="promptbox" id="promptbox"></div>
+    <button class="bigcopy" id="copyprompt">📋 Copy prompt</button>
+  </div>
+
+  <div class="card">
+    <h3>Step 2 · Paste the AI's reply</h3>
+    <p style="font-size:14px">Paste the whole reply — code fences and surrounding chatter are stripped automatically.</p>
+    <textarea class="paste" id="pastebox" placeholder='{"itr_copilot_import": 1, "speculative": [{"broker": "Zerodha", "net": 21167}], … }'></textarea>
+    <div class="applybar"><button class="bigbtn2" id="parsebtn">Read reply</button></div>
+    <div class="impstatus" id="impstatus"></div>
+    <div id="impreview" class="hidden">
+      <h4>Found in this reply</h4>
+      <div class="tablewrap"><table id="imptable"></table></div>
+      <div class="applybar">
+        <button class="bigcopy" id="applyadd">＋ Add to worksheet</button>
+        <button class="bigbtn2" id="applyreplace">Replace matching fields</button>
+        <span style="font-size:12.5px;color:var(--ink-3)">Add = appends rows &amp; sums totals (use when importing broker-by-broker). Replace = overwrites only the fields present in this reply.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Trust, but verify</h3>
+    <ul style="font-size:14.5px;padding-left:20px;margin:4px 0">
+      <li>AI extraction is a <b>first draft</b> — after importing, open the <button class="linkbtn" data-goto="prep">worksheet</button> and spot-check each figure against the document (especially STCG/LTCG sale vs cost, which some brokers label confusingly).</li>
+      <li>Cross-check the grand totals against the <b>AIS</b> — it's the tax department's own view of the same income.</li>
+      <li>The AI's <code>notes</code> array shows up in the preview — read it; that's where ambiguities (F&amp;O income, missing TANs, grandfathered pre-2018 holdings) are flagged.</li>
+      <li>Import each broker separately with <b>Add</b>, or attach everything to one chat and import once — both work.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ================== 06 PREP ================== -->
 <section class="section" id="sec-prep">
-  <div class="eyebrow">05 · Compute offline first</div>
+  <div class="eyebrow">06 · Compute offline first</div>
   <h2>Prep worksheet</h2>
-  <p class="lede">Fill these calculators from the broker reports and AIS <em>before</em> touching the portal. Everything you enter is saved in this browser and rolled up into the cheat sheet at the bottom — keep it open beside the portal while filing.</p>
+  <p class="lede">Fill these calculators from the broker reports and AIS <em>before</em> touching the portal — or let <button class="linkbtn" data-goto="ai">AI extract</button> fill them for you and just verify. Everything is saved in this browser and rolled up into the cheat sheet at the bottom — keep it open beside the portal while filing.</p>
 
   <div class="card">
     <h3>A · Speculative income (intraday)</h3>
@@ -582,6 +691,13 @@ kbd{
     <div class="totalrow"><span>Total TDS to claim</span><span class="num" id="tdstotal">₹0</span></div>
   </div>
 
+  <div class="card">
+    <h3>G · Salary (only if there is one)</h3>
+    <p style="font-size:13.5px;color:var(--ink-3)">From Form 16 Part B. Enter <b>gross salary</b> — the portal applies the ₹75,000 standard deduction itself in Schedule S. Salary TDS (section 192) belongs in worksheet F above.</p>
+    <div class="calcrow"><label for="salemp">Employer name</label><input type="text" id="salemp" data-ck="calc-salemp" placeholder="—" style="width:220px"></div>
+    <div class="calcrow"><label for="salgross">Gross salary (₹)</label><input type="number" id="salgross" data-ck="calc-salgross" min="0" placeholder="0"></div>
+  </div>
+
   <div class="card cheat">
     <h3>📋 Cheat sheet — keep beside the portal</h3>
     <div class="tablewrap"><table>
@@ -594,6 +710,7 @@ kbd{
       <tr><td>FD interest (OS row: term deposit)</td><td class="num" id="cs-fd">₹0</td></tr>
       <tr><td>Dividend total (OS)</td><td class="num" id="cs-div">₹0</td></tr>
       <tr><td>Dividend quarterly split</td><td class="num" id="cs-divq">—</td></tr>
+      <tr><td>Gross salary (Schedule S)</td><td class="num" id="cs-sal">₹0</td></tr>
       <tr><td>Total TDS</td><td class="num" id="cs-tds">₹0</td></tr>
     </table></div>
     <p style="font-size:12.5px;color:var(--ink-3);margin-bottom:0">Worked example these tools were built on: speculative ₹27,649 · STCG −₹45,424 (sale ₹1,58,88,671, cost ₹1,59,34,095) · LTCG −₹74,644 (sale ₹3,20,518, cost ₹3,95,162) · savings interest ₹5,363 · FD interest ₹50,814 · dividends ₹12,498 · TDS ₹15 → total income ₹96,324, tax nil, refund ₹20, losses ₹1,20,068 carried forward.</p>
@@ -602,7 +719,7 @@ kbd{
 
 <!-- ================== 06 WALKTHROUGH ================== -->
 <section class="section" id="sec-walk">
-  <div class="eyebrow">06 · The main event</div>
+  <div class="eyebrow">07 · The main event</div>
   <h2>Portal walkthrough</h2>
   <p class="lede">Sixteen steps, in the order the portal presents them for ITR-3 (fewer screens for ITR-1/2 — skip what the portal doesn't show). Mark each step done; progress is saved.</p>
 
@@ -878,7 +995,7 @@ kbd{
 
 <!-- ================== 07 ERRORS ================== -->
 <section class="section" id="sec-errors">
-  <div class="eyebrow">07 · When the portal says no</div>
+  <div class="eyebrow">08 · When the portal says no</div>
   <h2>Error fixer</h2>
   <p class="lede">Every validation error and portal quirk from the real filing, with the exact fix. Category A blocks upload; Category B/D lets you proceed. Type to filter.</p>
   <input type="text" class="errsearch" id="errsearch" placeholder="Filter errors… e.g. csv, audit, 10IEA, dividend">
@@ -961,7 +1078,7 @@ kbd{
 
 <!-- ================== 08 VERIFY ================== -->
 <section class="section" id="sec-verify">
-  <div class="eyebrow">08 · Sealing it</div>
+  <div class="eyebrow">09 · Sealing it</div>
   <h2>Submit &amp; e-verify</h2>
   <p class="lede">The return isn't filed until it's verified. And once submitted, it's frozen — so this is also your last-chance review ritual.</p>
 
@@ -998,7 +1115,7 @@ kbd{
 
 <!-- ================== 09 AFTER ================== -->
 <section class="section" id="sec-after">
-  <div class="eyebrow">09 · Aftercare</div>
+  <div class="eyebrow">10 · Aftercare</div>
   <h2>After filing</h2>
   <p class="lede">The return processes on its own; here's what to expect and when to act.</p>
 
@@ -1149,13 +1266,26 @@ function rowList(cfg){
     data.push({n:'',a:''});save(cfg.key,data);render();
   });
   render();
-  return function(){return data.reduce(function(s,r){var v=parseFloat(r.a);return s+(isNaN(v)?0:v)},0)};
+  function isEmpty(r){return (!r.n||!String(r.n).trim())&&(r.a===''||r.a==null)}
+  return {
+    sum:function(){return data.reduce(function(s,r){var v=parseFloat(r.a);return s+(isNaN(v)?0:v)},0)},
+    addRows:function(rows){
+      for(var i=data.length-1;i>=0;i--){if(isEmpty(data[i]))data.splice(i,1)}
+      rows.forEach(function(r){data.push(r)});
+      save(cfg.key,data);render();
+    },
+    replaceRows:function(rows){
+      data.length=0;rows.forEach(function(r){data.push(r)});
+      save(cfg.key,data);render();
+    }
+  };
 }
-var specSum=rowList({box:'specrows',add:'addspec',key:'rows.spec',namePh:'Broker (e.g. Zerodha)',allowNeg:true,
+var specApi=rowList({box:'specrows',add:'addspec',key:'rows.spec',namePh:'Broker (e.g. Zerodha)',allowNeg:true,
   seed:[{n:'',a:''}]});
-var savSum=rowList({box:'savrows',add:'addsav',key:'rows.sav',namePh:'Bank (savings)',allowNeg:false,seed:[{n:'',a:''}]});
-var fdSum=rowList({box:'fdrows',add:'addfd',key:'rows.fd',namePh:'Bank / deposit',allowNeg:false,seed:[{n:'',a:''}]});
-var tdsSum=rowList({box:'tdsrows',add:'addtds',key:'rows.tds',namePh:'Deductor + TAN',allowNeg:false,seed:[{n:'',a:''}]});
+var savApi=rowList({box:'savrows',add:'addsav',key:'rows.sav',namePh:'Bank (savings)',allowNeg:false,seed:[{n:'',a:''}]});
+var fdApi=rowList({box:'fdrows',add:'addfd',key:'rows.fd',namePh:'Bank / deposit',allowNeg:false,seed:[{n:'',a:''}]});
+var tdsApi=rowList({box:'tdsrows',add:'addtds',key:'rows.tds',namePh:'Deductor + TAN',allowNeg:false,seed:[{n:'',a:''}]});
+var specSum=specApi.sum,savSum=savApi.sum,fdSum=fdApi.sum,tdsSum=tdsApi.sum;
 
 /* ---------- recalc everything ---------- */
 function setTxt(id,t){document.getElementById(id).textContent=t}
@@ -1191,6 +1321,8 @@ function recalcAll(){
   setTxt('cs-lt',inr(lts)+' / '+inr(ltc)+' / '+inr(ltnet));
   setTxt('cs-sav',inr(sav));setTxt('cs-fd',inr(fd));setTxt('cs-div',inr(dv));
   setTxt('cs-divq',dv?(q+' ×4 + '+qlast):'—');
+  var sal=num(document.getElementById('salgross'));
+  setTxt('cs-sal',inr(sal));
   setTxt('cs-tds',inr(tds));
   /* tax estimator */
   taxCalc();
@@ -1278,6 +1410,176 @@ function showVerdict(code){
   document.getElementById('quizrestart').addEventListener('click',function(){quizStep=0;renderQuiz()});
 }
 renderQuiz();
+
+/* ---------- AI extract ---------- */
+var SCHEMA=[
+'{',
+' "itr_copilot_import": 1,',
+' "source": "<what document(s) you identified, e.g. Zerodha Tax P&L FY2025-26>",',
+' "speculative": [ {"broker": "<broker name>", "net": <net intraday profit, negative if loss>} ],',
+' "stcg": {"sale": <total sale consideration>, "cost": <total cost of acquisition>, "expenses": <transfer expenses or 0>},',
+' "ltcg": {"sale": <total sale consideration>, "cost": <total cost of acquisition>, "expenses": <transfer expenses or 0>},',
+' "savings_interest": [ {"bank": "<bank name>", "amount": <savings a/c interest>} ],',
+' "fd_interest": [ {"bank": "<bank / deposit name>", "amount": <FD or term-deposit interest>} ],',
+' "dividend_total": <total dividend received>,',
+' "tds": [ {"deductor": "<name>", "tan": "<TAN like MUMR14567A>", "section": "<194K/194A/192...>", "gross": <amount paid>, "tds": <tax deducted>} ],',
+' "salary": {"employer": "<name>", "gross": <gross salary before standard deduction>, "tds": <TDS on salary>},',
+' "notes": [ "<anything ambiguous, unusual, or needing my attention>" ]',
+'}'
+].join('\n');
+var FOCUS={
+  any:'Identify the document type(s) yourself. If several documents are attached, consolidate them all into one reply. Extract every category below that is actually present.',
+  broker:'This is a stock-broker tax P&L / capital gains statement. Focus on: (a) net intraday (speculative) profit or loss; (b) short-term delivery trades: TOTAL sell value and TOTAL buy value across all scrips, not just the net gain; (c) long-term (112A) trades: total sell value and total buy value. Use the summary/totals section of the report. If there is F&O income, do NOT mix it into these figures - report its net separately in notes.',
+  ais:'This is an AIS / TIS from the income-tax portal. Focus on: interest per bank, keeping SAVINGS interest separate from TERM-DEPOSIT/FD interest; total dividends; every TDS entry with deductor, TAN and section. Mention any share-sale (SFT) or other income entries in notes so I can cross-check.',
+  form16:'This is a Form 16 from an employer. Focus on: employer name, GROSS salary (before standard deduction - report the gross, do not subtract anything), and total TDS deducted under section 192. Note the regime the employer used and any other income they included, in notes.',
+  tds:'This is a Form 26AS or a TDS certificate (Form 16A). Focus on: every TDS row - deductor name, TAN, section, gross amount paid/credited, and tax deducted. Also note any advance tax / self-assessment tax payments in notes.',
+  bank:'This is a bank interest certificate / statement. Focus on: interest per account, keeping SAVINGS account interest separate from FD/term-deposit interest. Note any TDS the bank deducted (with TAN if shown).'
+};
+function buildPrompt(doc){
+  return 'You are a meticulous Indian income-tax data extractor. I am sharing a financial document for FY 2025-26 (AY 2026-27) to prepare an income-tax return.\n\n'
+  +FOCUS[doc]+'\n\n'
+  +'Rules:\n'
+  +'1. Extract ONLY figures actually present in the document. Never estimate or infer a missing number - use null instead.\n'
+  +'2. All amounts as plain integers in rupees: no commas, no currency symbols, round off paise.\n'
+  +'3. Intraday (same-day buy & sell) equity results are SPECULATIVE business income - never include them in stcg.\n'
+  +'4. stcg = listed equity / equity mutual funds held 12 months or less (section 111A). ltcg = held more than 12 months (section 112A). Report gross totals of sale and cost, not just the net.\n'
+  +'5. Keep savings-account interest and FD/term-deposit interest in separate lists.\n'
+  +'6. Omit or null any key that does not apply to this document.\n\n'
+  +'Reply with ONLY this JSON object - no explanations, no markdown, no code fences:\n\n'
+  +SCHEMA+'\n\n'
+  +'Before answering, silently double-check: every number appears verbatim (or as a correct sum of parts) in the document; stcg/ltcg sale and cost are gross totals; nothing speculative leaked into capital gains. Put every doubt in "notes".';
+}
+var curDoc=load('ai.doc','any');
+var chips=document.querySelectorAll('#docchips .chip');
+function renderPrompt(){
+  chips.forEach(function(c){c.classList.toggle('on',c.dataset.doc===curDoc)});
+  document.getElementById('promptbox').textContent=buildPrompt(curDoc);
+}
+chips.forEach(function(c){c.addEventListener('click',function(){curDoc=c.dataset.doc;save('ai.doc',curDoc);renderPrompt()})});
+renderPrompt();
+bindCopy(document.getElementById('copyprompt'),function(){return buildPrompt(curDoc)});
+
+function toInt(v){
+  if(v==null||v==='')return null;
+  if(typeof v==='string'){v=v.replace(/[₹,\s]/g,'').replace(/[−–]/g,'-')}
+  var n=parseFloat(v);return isNaN(n)?null:Math.round(n);
+}
+function extractJSON(text){
+  text=text.replace(/```[a-zA-Z]*\n?/g,'').replace(/```/g,'');
+  var a=text.indexOf('{'),b=text.lastIndexOf('}');
+  if(a<0||b<=a)throw new Error('No JSON object found in the pasted text.');
+  return JSON.parse(text.slice(a,b+1));
+}
+var parsedImport=null;
+function setStatus(cls,msg){
+  var el=document.getElementById('impstatus');
+  el.className='impstatus '+cls;el.textContent=msg;
+}
+document.getElementById('parsebtn').addEventListener('click',function(){
+  var raw=document.getElementById('pastebox').value;
+  document.getElementById('impreview').classList.add('hidden');
+  parsedImport=null;
+  if(!raw.trim()){setStatus('err','Nothing pasted yet.');return}
+  var o;
+  try{o=extractJSON(raw)}
+  catch(e){setStatus('err','Could not read that as JSON ('+e.message+'). Ask the AI to reply with only the JSON object and paste its whole reply here.');return}
+  var found=previewRows(o);
+  if(!found.length){setStatus('err','Valid JSON, but none of the expected fields (speculative / stcg / ltcg / interest / dividend / tds / salary) were found. Check that the AI used the schema from the prompt.');return}
+  parsedImport=o;
+  var tb=document.getElementById('imptable');
+  tb.innerHTML='<tr><th>Field</th><th>Extracted</th></tr>'+found.map(function(r){
+    return '<tr><td>'+r[0]+'</td><td class="num">'+r[1]+'</td></tr>';
+  }).join('');
+  document.getElementById('impreview').classList.remove('hidden');
+  setStatus('ok','Reply read successfully'+(o.source?' — source: '+String(o.source).slice(0,80):'')+'. Review below, then Add or Replace.');
+});
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function previewRows(o){
+  var rows=[];
+  function money(v){var n=toInt(v);return n==null?null:inr(n)}
+  if(Array.isArray(o.speculative)&&o.speculative.length){
+    var t=0,parts=o.speculative.map(function(r){var n=toInt(r.net)||0;t+=n;return esc(r.broker||'?')+' '+inr(n)});
+    rows.push(['Speculative (intraday)',parts.join(' · ')+' = '+inr(t)]);
+  }
+  if(o.stcg&&(toInt(o.stcg.sale)!=null||toInt(o.stcg.cost)!=null)){
+    rows.push(['STCG 111A','sale '+(money(o.stcg.sale)||'—')+' · cost '+(money(o.stcg.cost)||'—')+' · exp '+(money(o.stcg.expenses)||'₹0')]);
+  }
+  if(o.ltcg&&(toInt(o.ltcg.sale)!=null||toInt(o.ltcg.cost)!=null)){
+    rows.push(['LTCG 112A','sale '+(money(o.ltcg.sale)||'—')+' · cost '+(money(o.ltcg.cost)||'—')+' · exp '+(money(o.ltcg.expenses)||'₹0')]);
+  }
+  if(Array.isArray(o.savings_interest)&&o.savings_interest.length){
+    rows.push(['Savings interest',o.savings_interest.map(function(r){return esc(r.bank||'?')+' '+inr(toInt(r.amount)||0)}).join(' · ')]);
+  }
+  if(Array.isArray(o.fd_interest)&&o.fd_interest.length){
+    rows.push(['FD interest',o.fd_interest.map(function(r){return esc(r.bank||'?')+' '+inr(toInt(r.amount)||0)}).join(' · ')]);
+  }
+  if(toInt(o.dividend_total)!=null)rows.push(['Dividend total',inr(toInt(o.dividend_total))]);
+  if(Array.isArray(o.tds)&&o.tds.length){
+    rows.push(['TDS entries',o.tds.map(function(r){return esc(r.deductor||'?')+' ('+esc(r.section||'?')+') '+inr(toInt(r.tds)||0)}).join(' · ')]);
+  }
+  if(o.salary&&toInt(o.salary.gross)){
+    rows.push(['Salary',esc(o.salary.employer||'?')+' gross '+inr(toInt(o.salary.gross))+(toInt(o.salary.tds)?' · TDS '+inr(toInt(o.salary.tds)):'')]);
+  }
+  if(Array.isArray(o.notes)&&o.notes.length){
+    rows.push(['⚠ AI notes — read these',o.notes.map(esc).join('<br>')]);
+  }
+  return rows;
+}
+function setNumField(id,val,mode){
+  if(val==null)return;
+  var inp=document.getElementById(id);
+  var cur=parseFloat(inp.value);if(isNaN(cur))cur=0;
+  inp.value=String(mode==='add'?cur+val:val);
+  inp.dispatchEvent(new Event('input'));
+}
+function applyImport(mode){
+  var o=parsedImport;if(!o)return;
+  var did=[];
+  if(Array.isArray(o.speculative)&&o.speculative.length){
+    var rows=o.speculative.map(function(r){return{n:String(r.broker||''),a:String(toInt(r.net)||0)}});
+    (mode==='add'?specApi.addRows:specApi.replaceRows)(rows);did.push('speculative');
+  }
+  if(o.stcg){
+    setNumField('stsale',toInt(o.stcg.sale),mode);
+    setNumField('stcost',toInt(o.stcg.cost),mode);
+    setNumField('stexp',toInt(o.stcg.expenses),mode);
+    if(toInt(o.stcg.sale)!=null||toInt(o.stcg.cost)!=null)did.push('STCG');
+  }
+  if(o.ltcg){
+    setNumField('ltsale',toInt(o.ltcg.sale),mode);
+    setNumField('ltcost',toInt(o.ltcg.cost),mode);
+    setNumField('ltexp',toInt(o.ltcg.expenses),mode);
+    if(toInt(o.ltcg.sale)!=null||toInt(o.ltcg.cost)!=null)did.push('LTCG');
+  }
+  if(Array.isArray(o.savings_interest)&&o.savings_interest.length){
+    var sr=o.savings_interest.map(function(r){return{n:String(r.bank||''),a:String(toInt(r.amount)||0)}});
+    (mode==='add'?savApi.addRows:savApi.replaceRows)(sr);did.push('savings interest');
+  }
+  if(Array.isArray(o.fd_interest)&&o.fd_interest.length){
+    var fr=o.fd_interest.map(function(r){return{n:String(r.bank||''),a:String(toInt(r.amount)||0)}});
+    (mode==='add'?fdApi.addRows:fdApi.replaceRows)(fr);did.push('FD interest');
+  }
+  if(toInt(o.dividend_total)!=null){setNumField('divtotal',toInt(o.dividend_total),mode);did.push('dividend')}
+  var tdsRows=[];
+  if(Array.isArray(o.tds)){
+    o.tds.forEach(function(r){
+      var label=String(r.deductor||'?')+(r.tan?' · '+r.tan:'')+(r.section?' · '+r.section:'');
+      tdsRows.push({n:label,a:String(toInt(r.tds)||0)});
+    });
+  }
+  if(o.salary&&toInt(o.salary.gross)!=null){
+    setNumField('salgross',toInt(o.salary.gross),mode);
+    var emp=document.getElementById('salemp');
+    if(o.salary.employer&&(mode==='replace'||!emp.value)){emp.value=String(o.salary.employer);emp.dispatchEvent(new Event('input'))}
+    if(toInt(o.salary.tds)){tdsRows.push({n:String(o.salary.employer||'Employer')+' · 192 salary',a:String(toInt(o.salary.tds))})}
+    did.push('salary');
+  }
+  if(tdsRows.length){(mode==='add'?tdsApi.addRows:tdsApi.replaceRows)(tdsRows);did.push('TDS')}
+  recalcAll();
+  setStatus('ok','Applied ('+mode+'): '+did.join(', ')+'. Now open the Prep worksheet and verify each figure against the document.');
+}
+document.getElementById('applyadd').addEventListener('click',function(){applyImport('add')});
+document.getElementById('applyreplace').addEventListener('click',function(){applyImport('replace')});
 
 /* ---------- error search ---------- */
 var errsearch=document.getElementById('errsearch');
